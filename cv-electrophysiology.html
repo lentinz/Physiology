@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cardiac Electrophysiology Model</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout concept: readout strip over one tabbed chart (conduction, action potentials, ECG), controls in a column beside it.
+   On phones the readouts and a live ECG strip stay pinned while you scroll the controls. Same visual system as the hemodynamics model. */
+:root{
+  --bg:#0d1218; --panel:#141b23; --panel2:#1a232d; --line:#273343; --fg:#e7edf4; --mut:#98a6b6; --faint:#617083;
+  --accent:#4cc2ff; --accent-ink:#04141f; --rest:#2b4157; --act:#ff6b5a; --ecg:#6ee7b7; --sa:#ffc15e; --vent:#ff8a70;
+  --iNa:#ffb454; --iCa:#6ee7b7; --iK:#5ec8ff; --iTo:#f2d46b; --iK1:#8aa0b8; --iF:#a99bff; --iAch:#ff8fb1; --force:#4cc2ff; --ca:#ffc15e;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#f1f4f8; --panel:#ffffff; --panel2:#e9eef4; --line:#d3dce7; --fg:#14202b; --mut:#536274; --faint:#8794a4;
+  --accent:#0a6cab; --accent-ink:#ffffff; --rest:#cbd7e4; --act:#d9412d; --ecg:#0b8559; --sa:#9a5d00; --vent:#c24026;
+  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#f1f4f8; --panel:#ffffff; --panel2:#e9eef4; --line:#d3dce7; --fg:#14202b; --mut:#536274; --faint:#8794a4;
+  --accent:#0a6cab; --accent-ink:#ffffff; --rest:#cbd7e4; --act:#d9412d; --ecg:#0b8559; --sa:#9a5d00; --vent:#c24026;
+  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; color-scheme:light}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--sans);padding-block:12px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:9px;min-height:36px;padding:0 12px;cursor:pointer;touch-action:manipulation}
+button:hover{border-color:var(--faint)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.on{background:color-mix(in srgb,var(--accent) 18%,var(--panel2));border-color:var(--accent)}
+.app{max-width:1240px;margin:0 auto}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+header h1{margin:0;font-size:18px;font-weight:600;letter-spacing:.01em;flex:1 1 220px;min-width:0}
+header h1 small{display:block;font-size:12px;font-weight:400;color:var(--mut);letter-spacing:0}
+.hbtns{display:flex;gap:6px;flex-wrap:wrap}
+.hbtns a,.hbtns button{display:inline-flex;align-items:center;min-height:34px;padding:0 12px;border-radius:999px;font-size:13px;text-decoration:none;color:var(--fg);background:var(--panel2);border:1px solid var(--line)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 350px;grid-template-areas:"stage ctl" "explain ctl";gap:12px 16px;align-items:start}
+.stage{grid-area:stage;min-width:0}
+.explain{grid-area:explain;min-width:0}
+.ctl{grid-area:ctl;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px 14px}
+.pin{position:static}
+#mini{display:none}
+@media (max-width:900px){
+  .main{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage" "explain" "ctl"}
+  .ctl{position:static;max-height:none;overflow:visible}
+  .pin{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:6px 0 4px;margin-top:-6px}
+  #mini{display:block;width:100%;height:64px;margin-top:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+  .hbtns a,.hbtns button{min-height:30px;padding:0 10px;font-size:12.5px}header{margin-bottom:6px}header h1{font-size:16px}header h1 small{display:none}
+  .chartwrap{padding:4px 6px 2px!important}.chartfoot{padding:2px 8px 8px!important}
+}
+.chips{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-bottom:8px}
+@media (max-width:900px){.chips{display:flex;overflow-x:auto;scrollbar-width:none;margin-bottom:0}.chips .chip{flex:0 0 84px}}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 8px 5px;min-width:0}
+.chip .l{font-size:10px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.02em}
+.chip .v{font:500 19px/1.15 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip .v small{font:400 10.5px var(--sans);color:var(--mut);margin-left:3px}
+.chip .d{font:400 10.5px var(--mono);color:var(--faint);height:14px;white-space:nowrap}
+.chip .d.up{color:var(--accent)}.chip .d.dn{color:var(--sa)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tabs{display:flex;gap:6px;padding:10px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center;background:var(--panel2)}
+.tabs::before{content:"View:";font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-right:2px}
+.tabs button{border:1px solid var(--line);border-radius:999px;background:var(--panel);min-height:34px;padding:0 14px;color:var(--fg);font-size:13px;font-weight:500;white-space:nowrap}
+.tabs button:hover{border-color:var(--accent)}
+.tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media (max-width:900px){.tabs{flex-wrap:nowrap;overflow-x:auto;padding:6px 8px;scrollbar-width:none}.tabs::before{display:none}.tabs button{min-height:32px;padding:0 12px;flex:0 0 auto}}
+.chartwrap{padding:8px 8px 6px}
+#chart{display:block;width:100%;height:auto;margin:0 auto}
+.chartfoot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 12px 10px;font-size:12px;color:var(--mut)}
+.chartfoot .sp{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:30px;padding:0 10px;font-size:12px;background:var(--panel2)}
+.seg button+button{border-left:1px solid var(--line)}
+.chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.chk input{accent-color:var(--accent)}
+#evl{padding:0 14px 12px;font-size:13px}
+#evl .now{margin:0 0 8px;padding:8px 10px;border-radius:9px;background:var(--panel2);border:1px solid var(--line)}
+#evl .now b{color:var(--accent)}
+#evl table{width:100%;border-collapse:collapse;font-size:12.5px}
+#evl td{padding:3px 4px;border-top:1px solid var(--line)}
+#evl td:last-child{font:500 12.5px var(--mono);text-align:right;white-space:nowrap}
+#evl tr.cur td{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.explain .card{padding:12px 14px}
+.explain h2{margin:0 0 4px;font-size:12px;font-weight:600;color:var(--mut);letter-spacing:.07em;text-transform:uppercase}
+.explain p{margin:4px 0;font-size:14px}
+.explain .meta{font-size:12.5px;color:var(--mut)}
+.explain b.n{font:500 13px var(--mono);white-space:nowrap}
+.ctl h3{margin:14px 0 6px;font-size:11px;font-weight:600;color:var(--mut);letter-spacing:.09em;text-transform:uppercase}
+.ctl h3:first-child{margin-top:0}
+.scn{display:flex;flex-wrap:wrap;gap:5px}
+.scn button{min-height:31px;padding:0 10px;font-size:12.5px;border-radius:999px}
+.sl{margin:8px 0 2px}
+.sl .top{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.sl .top b{font:500 13px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sl .eff{font:400 11px var(--mono);color:var(--accent);min-height:14px}
+input[type=range]{width:100%;height:30px;margin:0;accent-color:var(--accent);background:none}
+.row2{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0;font-size:13px}
+.rh{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.rh button{min-height:31px;padding:0 10px;font-size:12.5px;border-radius:999px}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.tools button{font-size:12.5px;min-height:32px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
+.sheet.open{display:flex}
+.sheet .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:100%;max-width:700px;max-height:88vh;overflow:auto;padding:18px 20px 20px}
+.sheet h2{margin:0 0 6px;font-size:17px}
+.sheet h4{margin:16px 0 6px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+.sheet p,.sheet li{font-size:13.5px}
+.sheet ul{padding-left:18px;margin:6px 0}
+.sheet a{color:var(--accent)}
+.obj{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}
+.obj input{margin-top:3px;accent-color:var(--accent)}
+.obj .t{font-weight:500;font-size:13.5px}
+.obj .try{grid-column:2;font-size:12.5px;color:var(--mut)}
+.obj button{grid-row:1/3;grid-column:3;align-self:center;font-size:12px;min-height:30px}
+.close{width:100%;margin-top:14px}
+.warn{font-size:12.5px;color:var(--mut)}
+svg text{font-family:var(--sans)}
+.tk{fill:var(--mut);font:10.5px var(--mono)}
+.ax{fill:var(--mut);font:11px var(--sans)}
+.lb{fill:var(--fg);font:500 11.5px var(--sans);paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
+.lb.s{font-size:10.5px;fill:var(--mut);font-weight:400}
+.gl{stroke:var(--line);stroke-width:1;fill:none}
+.axl{stroke:var(--faint);stroke-width:1;fill:none}
+.cv{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.gh{fill:none;stroke:var(--faint);stroke-width:1.8;stroke-dasharray:5 4;stroke-linecap:round;stroke-linejoin:round}
+</style>
+<style>[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+
+<div class="app">
+<header>
+  <h1>Cardiac Electrophysiology Model<small>DPHT 7223 · Cardiovascular system · conduction, action potentials, heart rate and the ECG</small></h1>
+  <div class="hbtns">
+    <button id="bObj" type="button">Objectives</button>
+    <button id="bAbout" type="button">About</button>
+    <a id="lnkA" href="cv-hemodynamics.html">Hemodynamics model ↗</a>
+  </div>
+</header>
+<div class="main">
+  <section class="stage" aria-label="Model output">
+    <div class="pin">
+      <div class="chips" id="chips"></div>
+      <svg id="mini" role="img" aria-label="Live ECG strip"></svg>
+    </div>
+    <div class="card" style="margin-top:8px">
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <div class="chartwrap" style="padding:8px 8px 6px"><svg id="chart" role="img" aria-label="Interactive chart"></svg></div>
+      <div class="chartfoot">
+        <span id="opts" style="display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap"></span>
+        <label class="chk" id="refWrap"><input type="checkbox" id="showRef" checked> <span>Compare with <span id="refName">rest</span> (dashed)</span></label>
+        <span class="sp"></span>
+        <span style="display:inline-flex;gap:6px;align-items:center">
+          <span class="seg" id="spd"><button type="button" data-v="0.25" class="on" aria-label="Quarter speed">¼×</button><button type="button" data-v="0.5" aria-label="Half speed">½×</button><button type="button" data-v="1" aria-label="Real time">1×</button></span>
+          <button type="button" id="pause" aria-pressed="false" style="min-height:30px;font-size:12px;padding:0 10px">Pause</button></span>
+      </div>
+      <div id="evl"></div>
+    </div>
+  </section>
+  <section class="explain"><div class="card" id="explain"></div></section>
+  <aside class="ctl" id="ctl" aria-label="Controls"></aside>
+</div>
+</div>
+
+<div class="sheet" id="shObj" role="dialog" aria-modal="true" aria-label="Learning objectives"><div class="box">
+  <h2>Learning objectives</h2>
+  <p class="warn">From Dr. K's Electrophysiology and Heart Rate objectives. Each "Set up" button loads a starting point; tick an objective when you can explain what you saw.</p>
+  <div id="objList"></div>
+  <h4>Connections to Lab 5 (Cardiovascular Demands &amp; Responses to Physical Activity)</h4>
+  <ul id="labList"></ul>
+  <button class="close" type="button" data-close>Close</button>
+</div></div>
+<div class="sheet" id="shAbout" role="dialog" aria-modal="true" aria-label="About this model"><div class="box">
+  <h2>About this model</h2>
+  <p>This is a simplified, qualitative model of how the heart generates and conducts its electrical signal. It shows direction and relative size of change, not values for a real person. A resting adult starts at about 70 bpm with a PR interval of 170 ms, QRS of 90 ms and QT of about 370 ms, within the normal ranges in the lecture.</p>
+  <ul>
+    <li>Heart rate comes from the sinoatrial node. With no nerve input the intrinsic rate is about 100 bpm. Parasympathetic (vagal) activity slows it and sympathetic activity speeds it. The model sets the slope of phase 4 from these two inputs.</li>
+    <li>The exercise slider withdraws vagal tone first, then raises sympathetic activity, as described in Powers Ch. 9. Maximal rate is about 190 bpm.</li>
+    <li>Action potentials are drawn with the phases and the main currents named in the lecture. Current traces are qualitative sketches of when each current is active, not measured amplitudes.</li>
+    <li>The ECG is built from the timing of conduction (PR), ventricular depolarization (QRS) and repolarization (QT). The QT shortens as heart rate rises. It represents one lead (similar to lead II).</li>
+    <li>Raising extracellular K⁺ depolarizes the resting potential of the ventricular myocyte, which is shown only as a brief extension. Arrhythmias are shown as patterns, not as mechanisms in detail.</li>
+  </ul>
+  <h4>Sources</h4>
+  <ul>
+    <li>Kalyanasundaram A. <i>Cardiovascular System: Cardiac Function, Electrophysiology and Blood Circulation</i> (lecture slides, Electrophysiology and Heart Rate). DPHT 7223, UNT Health Fort Worth, Fall 2026.</li>
+    <li>Berne &amp; Levy, <i>Physiology</i>, 6th ed. (action potential and excitation-contraction coupling figures cited in the slides) and Boron &amp; Boulpaep, <i>Medical Physiology</i>, 3rd ed. (conduction system and arrhythmia figures cited in the slides).</li>
+    <li>Powers SK, Howley ET, Quindry JC. <i>Exercise Physiology: Theory and Application to Fitness and Performance</i>, 12th ed., Chapter 9, Circulatory Responses to Exercise (electrical activity of the heart, regulation of heart rate).</li>
+    <li>DPHT 7223 Module 3, Lab 5: Cardiovascular Demands &amp; Responses to Physical Activity.</li>
+  </ul>
+  <p class="warn">This model was AI-generated and may contain errors. If anything here differs from the official course materials, the official course materials take precedence.</p>
+  <button class="close" type="button" data-close>Close</button>
+</div></div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const sm=x=>{x=clamp(x,0,1);return x*x*(3-2*x)};
+const fx=(v,n=0)=>v.toFixed(n);
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* ================= electrophysiology model ================= */
+const REST={sym:10,vag:55,ex:0,K:4.2,rhythm:'nsr'};
+const EK=k=>-61.5*Math.log10(150/k);
+function autonomic(p){
+  const x=p.ex/100, xs=clamp((x-0.25)/0.75,0,1), xv=clamp(x/0.25,0,1);
+  const s0=p.sym/100, v0=p.vag/100;
+  return {s:s0+Math.max(0,0.9-s0)*xs, v:v0*(1-xv)};
+}
+function derive(p){
+  const {s,v}=autonomic(p), K=p.K, rhythm=p.rhythm;
+  const HRs=clamp(100*(1+s)*(1-0.65*v),30,200);
+  const HR=rhythm==='nsr'?HRs:rhythm==='af'?clamp(HRs+25,45,200):rhythm==='vt'?180:0;
+  const RRs=60/HRs, RR=HR?60/HR:0;
+  const PR=clamp(0.17+0.08*(v-0.55)-0.05*(s-0.10),0.12,0.22)+0.03*Math.max(0,K-6.5);
+  const QRS=0.09+0.025*Math.max(0,K-6.3);
+  const QT=0.40*Math.sqrt(RRs);
+  const APD=clamp(QT-QRS,0.10,0.40)*(1-0.06*s)*(1-0.05*Math.max(0,K-4.5));
+  const sa={MDP:-58-12*v,thr:-40-3*s,peak:10+3*s,P0:0.03,P3:Math.min(0.12,0.35*RRs),RR:RRs};
+  sa.P4=Math.max(0.04,sa.RR-sa.P0-sa.P3); sa.slope=(sa.thr-sa.MDP)/sa.P4;
+  const RMP=-90+0.8*(EK(K)-EK(4.2));
+  const ve={RMP,peak:30-Math.max(0,RMP+85)*0.9,p2a:8+12*s,p2b:-5,APD,t1:0.004,t2:Math.max(0.05,APD-0.07)};
+  const force=0.9+1.0*s;
+  const Tamp=0.30*(K>5?1+0.9*(K-5)/2.5:K<3.8?0.6:1), Pamp=0.12*(K>6.5?Math.max(0.2,1-0.6*(K-6.5)):1);
+  return {s,v,HRs,HR,RR,RRs,PR,QRS,QT,APD,sa,ve,force,Tamp,Pamp,rhythm,K,p};
+}
+function saAP(t,d){
+  const a=d.sa, tau=((t%a.RR)+a.RR)%a.RR;
+  if(tau<a.P0) return a.thr+(a.peak-a.thr)*sm(tau/a.P0);
+  if(tau<a.P0+a.P3) return a.peak+(a.MDP-a.peak)*sm((tau-a.P0)/a.P3);
+  const x=(tau-a.P0-a.P3)/a.P4; return a.MDP+(a.thr-a.MDP)*Math.pow(clamp(x,0,1),1.15);
+}
+function veAP(tau,d){
+  const v=d.ve;
+  if(tau<0) return v.RMP;
+  if(tau<v.t1) return v.RMP+(v.peak-v.RMP)*sm(tau/v.t1);
+  if(tau<0.014) return v.peak+(v.p2a-v.peak)*sm((tau-v.t1)/(0.014-v.t1));
+  if(tau<v.t2) return v.p2a+(v.p2b-v.p2a)*Math.pow((tau-0.014)/(v.t2-0.014),1.6);
+  if(tau<v.APD) return v.p2b+(v.RMP-v.p2b)*sm((tau-v.t2)/(v.APD-v.t2));
+  return v.RMP;
+}
+function forceAt(tau,d){
+  const A=d.APD; if(tau<0.012||tau>A*1.75) return 0;
+  const up=A-0.012; if(tau<A) return d.force*(1-Math.cos(Math.PI*(tau-0.012)/up))/2;
+  return d.force*Math.exp(-(tau-A)/(0.22*A));
+}
+function caAt(tau,d){ if(tau<0.004) return 0; const x=(tau-0.004)/0.06; return d.force*0.9*x*Math.exp(1-x)*(tau<1?1:0) }
+const gs=(t,c,w,a)=>a*Math.exp(-(t-c)*(t-c)/(2*w*w));
+function ecgBeat(tau,d,withP=true){ // tau = time since SA fires
+  const q0=0.03+d.PR, k=d.QRS/0.09, tk=d.QT/0.37;
+  let y=0;
+  if(withP) y+=gs(tau,0.03+0.035,0.022,d.Pamp);
+  y+=gs(tau,q0+0.012*k,0.008*k,-0.12)+gs(tau,q0+0.032*k,0.010*k,1.0)+gs(tau,q0+0.056*k,0.010*k,-0.25);
+  const wT=d.K>5?0.036*tk:0.045*tk;
+  y+=gs(tau,q0+d.QT*0.78,wT,d.Tamp);
+  return y;
+}
+/* ---- rhythm schedule ---- */
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function schedule(d){
+  const r=rng(7); let beats=[],W=3;
+  if(d.rhythm==='nsr'){const n=Math.max(2,Math.ceil(2.6/d.RR));W=n*d.RR;for(let i=0;i<n;i++)beats.push({tSA:i*d.RR,q0:i*d.RR+0.03+d.PR})}
+  else if(d.rhythm==='af'){W=4.6;let t=0.25;while(t<W-0.3){beats.push({q0:t});t+=d.RR*(0.5+1.0*r())}}
+  else if(d.rhythm==='vt'){const n=Math.max(2,Math.ceil(2.4/d.RR));W=n*d.RR;for(let i=0;i<n;i++)beats.push({q0:i*d.RR+0.05})}
+  return {W,beats};
+}
+const wrapT=(t,W)=>((t%W)+W)%W;
+function ecgSeries(d,S){
+  const N=Math.round(S.W*250), a=new Float32Array(N), W=S.W;
+  const ph=[[5.3,0.4],[7.9,1.9],[6.4,3.1],[9.1,4.4],[4.1,5.2]];
+  for(let i=0;i<N;i++){
+    const t=i/250; let y=0;
+    if(d.rhythm==='nsr'){
+      for(const b of S.beats){for(const o of [-W,0,W]){const tau=t-b.tSA+o; if(tau>-0.1&&tau<d.PR+d.QT+0.2) y+=ecgBeat(tau,d)}}
+    }else if(d.rhythm==='af'){
+      const tk=d.QT/0.37,q=d.QRS/0.09;
+      for(const b of S.beats){for(const o of [-W,0,W]){const tau=t-b.q0+o;if(tau>-0.1&&tau<d.QT+0.2){y+=gs(tau,0.012*q,0.008*q,-0.12)+gs(tau,0.032*q,0.010*q,1)+gs(tau,0.056*q,0.010*q,-0.25)+gs(tau,0.9*d.QT*0.78*Math.min(1,tk),0.04,d.Tamp*0.9)}}}
+      for(const [f,p] of ph.slice(0,3)) y+=0.035*Math.sin(2*Math.PI*f*t+p)*(0.7+0.3*Math.sin(2*Math.PI*0.5*t+p));
+    }else if(d.rhythm==='vt'){
+      for(const b of S.beats){for(const o of [-W,0,W]){const tau=t-b.q0+o;if(tau>-0.1&&tau<0.4)y+=gs(tau,0.07,0.04,1.15)+gs(tau,0.17,0.055,-0.55)}}
+    }else{
+      for(const [f,p] of ph) y+=0.28*Math.sin(2*Math.PI*f*t+p)*(0.55+0.45*Math.sin(2*Math.PI*(0.37+f*0.05)*t+2*p));
+    }
+    a[i]=y;
+  }
+  return a;
+}
+/* ================= heart geometry ================= */
+const VPATH='M72 196 Q200 176 328 196 Q338 300 200 394 Q62 300 72 196 Z';
+const RA={cx:130,cy:106,rx:62,ry:62}, LA={cx:270,cy:106,rx:62,ry:62};
+const SEEDS=[[200,230],[190,300],[176,356],[196,384],[212,290],[228,350],[204,384],[120,330],[92,260],[88,214],[280,330],[308,260],[312,214]];
+const SA_POS=[112,66], AV_POS=[196,178], BACH=[200,100];
+let DOTS={atr:[],ven:[]};
+(function(){
+  const cv=document.createElement('canvas').getContext('2d'), vp=new Path2D(VPATH);
+  const SP=14;
+  for(let y=44;y<176;y+=SP)for(let x=60;x<340;x+=SP){
+    const inR=((x-RA.cx)/RA.rx)**2+((y-RA.cy)/RA.ry)**2<0.9, inL=((x-LA.cx)/LA.rx)**2+((y-LA.cy)/LA.ry)**2<0.9;
+    if(inR||inL) DOTS.atr.push({x,y,left:inL,da:0});
+  }
+  for(let y=204;y<392;y+=SP)for(let x=76;x<330;x+=SP){
+    if(cv.isPointInPath(vp,x,y)&&Math.hypot(x-200,0)>0){
+      let md=1e9;for(const s of SEEDS)md=Math.min(md,Math.hypot(x-s[0],y-s[1]));
+      DOTS.ven.push({x,y,md,septum:Math.abs(x-200)<8});
+    }
+  }
+})();
+function setDelays(d){
+  for(const a of DOTS.atr){
+    const dist=a.left?Math.hypot(SA_POS[0]-BACH[0],SA_POS[1]-BACH[1])+Math.hypot(a.x-BACH[0],a.y-BACH[1]):Math.hypot(a.x-SA_POS[0],a.y-SA_POS[1]);
+    a.da=0.03+dist/3100;
+  }
+  const maxMd=Math.max(...DOTS.ven.map(v=>v.md));
+  for(const v of DOTS.ven){
+    if(d.rhythm==='vt'){const dd=Math.hypot(v.x-250,v.y-335);v.dv=dd/1250}
+    else v.dv=v.md/maxMd*d.QRS;
+    v.apd=d.APD*(1+0.10*(1-(v.y-190)/204));
+  }
+}
+const act=(u,apd)=>{ if(u<0) return 0; if(u<0.012) return u/0.012; if(u<apd-0.08) return 1; if(u<apd) return (apd-u)/0.08; return 0 };
+
+/* ================= state ================= */
+let st={...REST}, refP={...REST}, pinned=false, last='intro', sceneNote=null, tab='cond';
+let D=derive(st), DR=derive(refP), S=schedule(D), E=ecgSeries(D,S), clock=0, speed=0.25, paused=false, showRef=true;
+let optCur='ven', optForce=false;
+let refs={};
+const SCN=[
+ ['rest','Rest',{}],
+ ['athlete','Athlete at rest',{vag:85,sym:5}],
+ ['ex40','Light exercise',{ex:30}],
+ ['ex100','Maximal exercise',{ex:100}],
+ ['denerv','No nerve input',{sym:0,vag:0}],
+ ['vagal','Strong vagal tone',{vag:100,sym:0}],
+ ['hyperk','High K⁺',{K:7}],
+ ['af','Atrial fibrillation',{rhythm:'af'}],
+ ['vt','Ventricular tachycardia',{rhythm:'vt'}],
+ ['vf','Ventricular fibrillation',{rhythm:'vf'}],
+];
+const CT=[
+ {g:'Heart rate control',k:'ex',label:'Exercise intensity',min:0,max:100,step:1,u:'%'},
+ {g:'Heart rate control',k:'sym',label:'Sympathetic activity (norepinephrine)',min:0,max:100,step:1,u:'%',eff:()=>D.s*100},
+ {g:'Heart rate control',k:'vag',label:'Parasympathetic activity (vagus, ACh)',min:0,max:100,step:1,u:'%',eff:()=>D.v*100},
+ {g:'Ions',k:'K',label:'Extracellular K⁺',min:3.0,max:7.5,step:0.1,u:' mM'},
+];
+const RH=[['nsr','Sinus rhythm'],['af','Atrial fibrillation'],['vt','V-tach'],['vf','V-fib']];
+function buildCtl(){
+  let h='<h3>Scenarios</h3><div class="scn" id="scn">'+SCN.map(s=>`<button type="button" data-s="${s[0]}">${s[1]}</button>`).join('')+'</div>';
+  let g='';
+  for(const c of CT){
+    if(c.g!==g){g=c.g;h+=`<h3>${g}</h3>`}
+    h+=`<div class="sl"><div class="top"><label for="s_${c.k}">${c.label}</label><b id="v_${c.k}"></b></div><input type="range" id="s_${c.k}" min="${c.min}" max="${c.max}" step="${c.step}" value="${st[c.k]}"><div class="eff" id="e_${c.k}"></div></div>`;
+  }
+  h+=`<h3>Rhythm</h3><div class="rh" id="rh">${RH.map(r=>`<button type="button" data-v="${r[0]}">${r[1]}</button>`).join('')}</div>`;
+  h+=`<div class="tools"><button type="button" id="bPin">Pin current as reference</button><button type="button" id="bReset">Reset to rest</button></div>`;
+  $('#ctl').innerHTML=h;
+  for(const c of CT) $('#s_'+c.k).addEventListener('input',e=>{st[c.k]=+e.target.value;sceneNote=null;last=c.k;update()});
+  $('#scn').addEventListener('click',e=>{const b=e.target.closest('button');if(b)applyScn(b.dataset.s)});
+  $('#rh').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st.rhythm=b.dataset.v;sceneNote=null;last='rhythm';update()});
+  $('#bPin').addEventListener('click',()=>{refP={...st};DR=derive(refP);pinned=true;update()});
+  $('#bReset').addEventListener('click',()=>{st={...REST};pinned=false;refP={...REST};DR=derive(refP);sceneNote='rest';last='scn:rest';update()});
+}
+function syncCtl(){
+  for(const c of CT){
+    const i=$('#s_'+c.k); if(+i.value!==st[c.k]) i.value=st[c.k];
+    $('#v_'+c.k).textContent=(c.k==='K'?(+st.K).toFixed(1):st[c.k])+c.u;
+    let t=''; if(c.eff){const e=c.eff(); if(Math.abs(e-st[c.k])>1.2) t='in use: '+Math.round(e)+'%'}
+    $('#e_'+c.k).textContent=t;
+  }
+  for(const b of $('#rh').children) b.classList.toggle('on',b.dataset.v===st.rhythm);
+  for(const b of $('#scn').children) b.classList.toggle('on',b.dataset.s===sceneNote);
+  $('#bPin').textContent=pinned?'Re-pin current as reference':'Pin current as reference';
+}
+function applyScn(id){const s=SCN.find(x=>x[0]===id);st={...REST,...s[2]};sceneNote=id;last='scn:'+id;if(id==='af'||id==='vt'||id==='vf'){}update()}
+
+/* ================= chips & explanation ================= */
+const CH=[
+ ['HR','Heart rate','bpm',d=>d.HR,0],
+ ['RR','R-R interval','ms',d=>d.RR*1000,0],
+ ['PR','PR interval','ms',d=>d.PR*1000,0],
+ ['QRS','QRS','ms',d=>d.QRS*1000,0],
+ ['QT','QT interval','ms',d=>d.QT*1000,0],
+ ['SL','Phase 4 slope','mV/s',d=>d.sa.slope,0],
+ ['APD','Ventricular AP','ms',d=>d.APD*1000,0],
+ ['FO','Contraction force','× rest',d=>d.force,2],
+];
+function buildChips(){$('#chips').innerHTML=CH.map(c=>`<div class="chip" id="c_${c[0]}" title="${c[1]} (${c[2]})"><div class="l">${c[1]}</div><div class="v"></div><div class="d"></div></div>`).join('')}
+function syncChips(){
+  const na=D.rhythm!=='nsr';
+  for(const c of CH){
+    const el=$('#c_'+c[0]); let val,dtxt='',cls='';
+    const sinus=['PR','QRS','QT','SL','APD'].includes(c[0]);
+    if(D.rhythm==='vf'&&c[0]!=='FO'||(D.rhythm==='vf'&&c[0]==='FO')){val='—'}
+    else if(D.rhythm==='af'&&['PR','SL'].includes(c[0])) val='—';
+    else if(D.rhythm==='vt'&&['PR','SL'].includes(c[0])) val='—';
+    else{
+      const v=c[3](D), r0=c[3](DR); val=fx(v,c[4]); const d=v-r0;
+      if(c[0]==='RR'&&D.rhythm==='af'){val='irreg.'}
+      else if(Math.abs(d)>=(c[4]?0.02:0.5)){dtxt=(d>0?'▲ +':'▼ −')+fx(Math.abs(d),c[4]);cls=d>0?'up':'dn'}
+    }
+    el.querySelector('.v').textContent=val; const dd=el.querySelector('.d');dd.textContent=dtxt;dd.className='d '+cls;
+  }
+}
+const ar=(a,b,n=0)=>`<b class="n">${fx(a,n)} → ${fx(b,n)}</b>`;
+const SCENE={
+ rest:{t:()=>`Resting adult: heart rate about 70 bpm, set by the SA node with a vagal brake (intrinsic rate about 100 bpm). PR 170 ms, QRS 90 ms, QT about 370 ms.`,m:'Use this as the reference. Click through the three tabs to follow one beat from SA node to T wave.'},
+ athlete:{t:(d,r)=>`High vagal tone: heart rate ${ar(r.HR,d.HR)} bpm. Phase 4 is flatter and starts from a more negative potential (${fx(d.sa.MDP)} mV), so the SA node takes longer to reach threshold. PR ${ar(r.PR*1000,d.PR*1000)} ms.`,m:'Lab 5 chronic item: resting HR falls with training, partly through higher parasympathetic tone.'},
+ ex40:{t:(d,r)=>`Light exercise: heart rate ${ar(r.HR,d.HR)} bpm, mostly by pulling back vagal tone (${fx(d.v*100)}% in use). Sympathetic activity has barely changed yet.`,m:'Powers: the first rise in HR, up to about 100 bpm, is from withdrawal of parasympathetic tone. Drag the exercise slider further to see sympathetic drive take over.'},
+ ex100:{t:(d,r)=>`Maximal exercise: heart rate ${ar(r.HR,d.HR)} bpm. Sympathetic activity is high (${fx(d.s*100)}%), vagal tone is gone. Phase 4 slope ${ar(r.sa.slope,d.sa.slope)} mV/s, PR ${ar(r.PR*1000,d.PR*1000)} ms, QT ${ar(r.QT*1000,d.QT*1000)} ms, contraction force × ${fx(d.force,2)}.`,m:'Each cycle is shorter, mostly because diastole shrinks. The ventricular action potential also shortens, so the QT shortens.'},
+ denerv:{t:(d,r)=>`No nerve input (for example a transplanted heart): the SA node runs at its intrinsic rate of about ${fx(d.HR)} bpm. Resting rate is lower than this because vagal tone normally holds it back.`,m:'Lecture: automaticity is the ability to initiate a beat. The SA node has the fastest spontaneous rate, so it is the pacemaker.'},
+ vagal:{t:(d,r)=>`Strong vagal stimulation: heart rate ${ar(r.HR,d.HR)} bpm, PR ${ar(r.PR*1000,d.PR*1000)} ms. Acetylcholine opens K⁺ channels and slows the If-driven depolarization.`,m:'Vagal axons end mainly in the SA node, AV node and atria, so there is little effect on ventricular contractility.'},
+ hyperk:{t:(d,r)=>`High extracellular K⁺ (${fx(d.K,1)} mM) reduces the K⁺ gradient, so the ventricular resting potential moves from ${fx(r.ve.RMP)} to ${fx(d.ve.RMP)} mV. The T wave becomes taller and narrower, and conduction slows.`,m:'The resting potential of a ventricular myocyte depends mostly on the K⁺ gradient. This is a brief extension beyond the lecture slides.'},
+ af:{t:(d)=>`Atrial fibrillation: the atria quiver instead of contracting in sequence. There are no P waves, and the AV node passes impulses to the ventricles at irregular intervals (mean about ${fx(d.HR)} bpm).`,m:'Lecture: atria do not contribute to ventricular filling. Atrial fibrillation can be induced by strenuous endurance exercise performed repeatedly over time.'},
+ vt:{t:()=>`Ventricular tachycardia: a rapid, regular rhythm with wide, repeated QRS complexes from an ectopic ventricular focus. The ventricles have little time to fill.`,m:'Lecture: V-tach is a precursor to ventricular fibrillation.'},
+ vf:{t:()=>`Ventricular fibrillation: highly irregular, continuous, uncoordinated activity. No blood is ejected (cardiac arrest). Defibrillation is required.`,m:'Lecture: lethal if untreated. Compare with the organized rhythms.'},
+};
+function explain(){
+  const d=D,r=DR,k=last; let t='',m='';
+  const dn=(a,b)=>a<b, rs=pinned?refP:REST;
+  if(k==='intro'){t='Pick a scenario or move a slider. Start on the <b>Conduction</b> tab to follow one beat, then open <b>Action potentials</b> and <b>ECG</b>.';m='Tip: predict how heart rate and the ECG intervals will change before you move a slider.'}
+  else if(k.startsWith('scn:')){const s=SCENE[k.slice(4)];t=s.t(d,r);m=s.m}
+  else if(k==='sym'){
+    t=st.sym>rs.sym?`More norepinephrine acting on β1 receptors increases If and Ca²⁺ entry, so phase 4 gets steeper (${ar(r.sa.slope,d.sa.slope)} mV/s) and threshold is reached sooner. Heart rate ${ar(r.HR,d.HR)} bpm. The AV node also conducts faster (PR ${ar(r.PR*1000,d.PR*1000)} ms) and Ca²⁺ entry into the ventricular myocyte rises, so contraction force becomes × ${fx(d.force,2)}.`
+    :`Less sympathetic activity flattens phase 4 (${ar(r.sa.slope,d.sa.slope)} mV/s). Heart rate ${ar(r.HR,d.HR)} bpm and contraction force × ${fx(d.force,2)}.`;
+    m='Lecture: sympathetic neurons release norepinephrine acting on β-adrenoceptors to increase the rate of spontaneous depolarization of the SA and AV nodes and enhance Ca²⁺ entry into myocardium.'}
+  else if(k==='vag'){
+    t=st.vag>rs.vag?`Acetylcholine from the vagus lowers If and opens K⁺ channels, so the cell starts phase 4 more negative (${fx(d.sa.MDP)} mV) and depolarizes more slowly (${ar(r.sa.slope,d.sa.slope)} mV/s). Heart rate ${ar(r.HR,d.HR)} bpm and PR ${ar(r.PR*1000,d.PR*1000)} ms. Ventricular contraction is little affected.`
+    :`Less vagal activity removes the brake on the SA node. Phase 4 slope ${ar(r.sa.slope,d.sa.slope)} mV/s and heart rate ${ar(r.HR,d.HR)} bpm.`;
+    m='Lecture: vagal nerves release acetylcholine, which slows the rate of spontaneous depolarization and has little effect on contractility.'}
+  else if(k==='ex'){
+    t=st.ex>0?`As intensity rises, vagal tone is withdrawn first (${fx(d.v*100)}% in use), then sympathetic activity climbs (${fx(d.s*100)}%). Heart rate ${ar(r.HR,d.HR)} bpm, PR ${ar(r.PR*1000,d.PR*1000)} ms, QT ${ar(r.QT*1000,d.QT*1000)} ms, contraction force × ${fx(d.force,2)}.`:`Exercise drive is off.`;
+    m='Powers: the initial rise to about 100 bpm is from parasympathetic withdrawal; at higher work rates sympathetic outflow to the SA and AV nodes drives heart rate. Lecture: strenuous endurance exercise repeated over time can raise arrhythmia risk, including atrial fibrillation.'}
+  else if(k==='K'){
+    t=st.K>rs.K?`Higher extracellular K⁺ shrinks the K⁺ gradient, so the resting potential of the ventricular myocyte becomes less negative (${ar(r.ve.RMP,d.ve.RMP)} mV). The T wave grows taller and narrower and the action potential shortens.`
+    :`Lower extracellular K⁺ makes the resting potential more negative (${ar(r.ve.RMP,d.ve.RMP)} mV) and flattens the T wave.`;
+    m='Beyond the lecture slides: the K⁺ gradient sets the resting potential (about −90 mV in the ventricular myocyte).'}
+  else if(k==='rhythm'){const s=SCENE[st.rhythm==='nsr'?'rest':st.rhythm];t=st.rhythm==='nsr'?'Back to normal sinus rhythm: each beat starts at the SA node, so every QRS is preceded by a P wave.':s.t(d,r);m=st.rhythm==='nsr'?'':s.m}
+  $('#explain').innerHTML=`<h2>What changed and why</h2><p>${t}</p>${m?`<p class="meta">${m}</p>`:''}`;
+}
+
+/* ================= drawing helpers ================= */
+function PL(W,H,m,xr,yr){const w=W-m.l-m.r,h=H-m.t-m.b;return{W,H,m,w,h,xr,yr,X:v=>m.l+(v-xr[0])/(xr[1]-xr[0])*w,Y:v=>m.t+h-(v-yr[0])/(yr[1]-yr[0])*h}}
+const pth=(pts,P)=>'M'+pts.map(p=>P.X(p[0]).toFixed(1)+' '+P.Y(p[1]).toFixed(1)).join('L');
+const ticks=(a,b,n)=>{const r=[];for(let v=a;v<=b+1e-9;v+=n)r.push(+v.toFixed(3));return r};
+function axes(P,xt,yt,xl,yl,xf){
+  let s='';
+  for(const v of yt) s+=`<path class="gl" d="M${P.m.l} ${P.Y(v).toFixed(1)}H${P.m.l+P.w}"/><text class="tk" x="${P.m.l-6}" y="${(P.Y(v)+3.5).toFixed(1)}" text-anchor="end">${v}</text>`;
+  for(const v of xt) s+=`<text class="tk" x="${P.X(v).toFixed(1)}" y="${P.m.t+P.h+14}" text-anchor="middle">${xf?xf(v):v}</text><path class="gl" d="M${P.X(v).toFixed(1)} ${P.m.t+P.h}v4"/>`;
+  s+=`<path class="axl" d="M${P.m.l} ${P.m.t}V${P.m.t+P.h}H${P.m.l+P.w}"/>`;
+  if(xl) s+=`<text class="ax" x="${P.m.l+P.w/2}" y="${P.H-3}" text-anchor="middle">${xl}</text>`;
+  if(yl) s+=`<text class="ax" transform="translate(12 ${P.m.t+P.h/2}) rotate(-90)" text-anchor="middle">${yl}</text>`;
+  return s;
+}
+function setSvg(W,H,inner){const c=$('#chart');c.setAttribute('viewBox',`0 0 ${W} ${H}`);c.setAttribute('width',W);c.setAttribute('height',H);c.innerHTML=inner}
+const ecgPts=(arr,W,x0=0)=>{const a=[];for(let i=0;i<arr.length;i++)a.push([i/250,arr[i]]);return a};
+
+/* ---------- tab: conduction ---------- */
+const EVN=[
+ ['SA node fires','SA node','0'],
+ ['Atrial depolarization (P wave), atrial contraction','Atria',null],
+ ['AV node delay (PR segment): ventricles can fill','AV node',null],
+ ['Ventricular depolarization (QRS) through His bundle, bundle branches, Purkinje fibers','Ventricles',null],
+ ['Ventricles contracting and emptying (ST segment, AP plateau)','ST',null],
+ ['Ventricular repolarization (T wave), apex to base','T',null],
+ ['Diastole: SA node phase 4 depolarizes slowly toward the next beat','Rest',null],
+];
+function evTimes(d){const q0=0.03+d.PR;return [0,0.03,0.03+0.09,q0,q0+d.QRS,q0+Math.max(d.QRS+0.05,d.APD-0.07),q0+d.QT]}
+function drawCond(W){
+  const hs=Math.min(W-8,420), sc=hs/400, hx=(W-hs)/2;
+  const stripH=88, H=hs*1.03+stripH+10;
+  let s=`<g transform="translate(${hx.toFixed(1)} 4) scale(${sc.toFixed(3)})">`;
+  s+=`<ellipse cx="${RA.cx}" cy="${RA.cy}" rx="${RA.rx+6}" ry="${RA.ry+6}" style="fill:none;stroke:var(--faint);stroke-width:2"/><ellipse cx="${LA.cx}" cy="${LA.cy}" rx="${LA.rx+6}" ry="${LA.ry+6}" style="fill:none;stroke:var(--faint);stroke-width:2"/>`;
+  s+=`<path d="${VPATH}" style="fill:none;stroke:var(--faint);stroke-width:2"/><path d="M200 190V392" style="stroke:var(--line);stroke-dasharray:4 4"/>`;
+  s+=DOTS.atr.map((a,i)=>`<circle cx="${a.x}" cy="${a.y}" r="5.2" style="fill:var(--rest)"/>`).join('')+DOTS.ven.map(v=>`<circle cx="${v.x}" cy="${v.y}" r="5.2" style="fill:var(--rest)"/>`).join('');
+  s+=DOTS.atr.map((a,i)=>`<circle class="da" cx="${a.x}" cy="${a.y}" r="5.2" style="fill:var(--act);opacity:0"/>`).join('')+DOTS.ven.map(v=>`<circle class="dv" cx="${v.x}" cy="${v.y}" r="5.2" style="fill:var(--act);opacity:0"/>`).join('');
+  // conduction system
+  const ln=(pts,id,w=3)=>`<path id="${id}" d="M${pts.map(p=>p.join(' ')).join('L')}" style="fill:none;stroke:var(--faint);stroke-width:${w};stroke-linecap:round;stroke-linejoin:round"/>`;
+  s+=ln([[SA_POS[0],SA_POS[1]],[AV_POS[0]-6,AV_POS[1]-2]],'pAtr',1.5);
+  s+=ln([AV_POS,[200,226]],'pHis',4)+ln([[200,226],[190,300],[176,356],[196,384]],'pRB',3)+ln([[200,226],[212,290],[228,350],[204,384]],'pLB',3)+ln([[196,384],[120,330],[92,260],[88,214]],'pPR',2)+ln([[204,384],[280,330],[308,260],[312,214]],'pPL',2);
+  s+=`<circle id="nSA" cx="${SA_POS[0]}" cy="${SA_POS[1]}" r="9" style="fill:var(--sa);stroke:var(--bg);stroke-width:2"/><circle id="nAV" cx="${AV_POS[0]}" cy="${AV_POS[1]}" r="8" style="fill:var(--faint);stroke:var(--bg);stroke-width:2"/>`;
+  const lab=(t,x,y,a='middle')=>`<text class="lb" x="${x}" y="${y}" text-anchor="${a}" style="font-size:13px">${t}</text>`;
+  s+=lab('SA node',SA_POS[0]-16,SA_POS[1]-14,'middle')+lab('AV node',AV_POS[0]+14,AV_POS[1]-12,'start')+lab('His bundle',212,214,'start')+lab('RA',80,92,'middle')+lab('LA',320,92,'middle')+lab('RV',108,320,'middle')+lab('LV',292,320,'middle');
+  s+=`<text class="lb s" x="236" y="262" style="font-size:11px">Purkinje</text><text class="lb s" x="94" y="370" style="font-size:11px" text-anchor="middle">bundle branches</text>`;
+  s+=`</g>`;
+  // strip
+  const y0=hs*1.03+8, P=PL(W,stripH,{l:10,r:10,t:8,b:14},[0,S.W],[-0.5,1.2]);
+  s+=`<g transform="translate(0 ${y0.toFixed(1)})"><path class="gl" d="M${P.m.l} ${P.Y(0)}H${W-P.m.r}"/><path class="cv" style="stroke:var(--ecg);stroke-width:1.8" d="${pth(ecgPts(E),P)}"/><line id="cur" x1="0" x2="0" y1="${P.m.t}" y2="${P.m.t+P.h}" style="stroke:var(--fg);stroke-width:1.4;opacity:.8"/><text class="ax" x="${P.m.l}" y="${stripH-1}">ECG (one lead)</text></g>`;
+  setSvg(W,H,s);
+  refs={P,W:S.W,ra:[...document.querySelectorAll('#chart .da')],rv:[...document.querySelectorAll('#chart .dv')],cur:$('#cur'),nSA:$('#nSA'),nAV:$('#nAV'),conds:['pHis','pRB','pLB','pPR','pPL','pAtr'].map(i=>$('#'+i)),stripY:y0};
+  $('#evl').innerHTML=`<div class="now" id="evnow"></div><table>${EVN.map((e,i)=>`<tr id="ev${i}"><td>${e[0]}</td><td></td></tr>`).join('')}</table>`;
+  const tm=evTimes(D);
+  EVN.forEach((e,i)=>{ $('#ev'+i).lastChild.textContent=D.rhythm==='nsr'?fx(tm[i]*1000)+' ms':'' });
+  if(D.rhythm!=='nsr') $('#evl').insertAdjacentHTML('afterbegin',`<p class="warn" style="margin:0 0 8px">Timings in the table apply to sinus rhythm. The animation shows the current rhythm.</p>`);
+}
+function frCond(t){
+  const W=S.W, tt=wrapT(t,W), r=refs;
+  let da=null;
+  if(D.rhythm==='vf'){
+    const k=Math.floor(t*14);
+    r.ra.forEach((c,i)=>c.style.opacity=(Math.sin(i*12.9898+k*78.233)*43758.5453%1+1)%1>0.5?1:0.1);
+    r.rv.forEach((c,i)=>c.style.opacity=(Math.sin(i*4.1+k*37.719)*14375.5453%1+1)%1>0.5?1:0.1);
+    $('#evnow').innerHTML='<b>No coordinated activation.</b> Ventricular fibrillation: cells fire in a chaotic pattern, so the ventricles twitch instead of contracting. No blood is ejected.';
+    return;
+  }
+  // find beat
+  let bq=null,bt=1e9,bs=null;
+  for(const b of S.beats){const tau=((tt-b.q0+W/2)%W+W)%W-W/2; if(tau>-0.06&&tau<bt){bt=tau;bq=b}}
+  for(let i=0;i<DOTS.ven.length;i++){const v=DOTS.ven[i];r.rv[i].style.opacity=bq?act(bt-v.dv,v.apd):0}
+  let stateSA='';
+  if(D.rhythm==='nsr'){
+    let st_=1e9,bb=null;
+    for(const b of S.beats){const tau=((tt-b.tSA+W/2)%W+W)%W-W/2; if(tau>-0.03&&tau<st_){st_=tau;bb=b}}
+    for(let i=0;i<DOTS.atr.length;i++){const a=DOTS.atr[i];r.ra[i].style.opacity=bb?act(st_-a.da,0.2):0}
+    r.nSA.style.opacity=st_>=0&&st_<0.06?1:0.45;
+    const q0=0.03+D.PR; const on=(a,b)=>st_>=a&&st_<b;
+    r.nAV.style.fill=on(0.05,q0)?'var(--act)':'var(--faint)';
+    const hi=(el,a)=>{el.style.stroke=a?'var(--act)':'var(--faint)'};
+    hi(r.conds[0],on(q0-0.012,q0+0.02));hi(r.conds[1],on(q0,q0+0.04));hi(r.conds[2],on(q0,q0+0.04));hi(r.conds[3],on(q0+0.01,q0+0.06));hi(r.conds[4],on(q0+0.01,q0+0.06));hi(r.conds[5],on(0.01,0.05));
+    const tm=evTimes(D); let idx=6; for(let i=0;i<6;i++){ if(st_<tm[i+1]){idx=i;break} }
+    $('#evnow').innerHTML='<b>Now:</b> '+EVN[idx][0]+'.';
+    EVN.forEach((e,i)=>$('#ev'+i).classList.toggle('cur',i===idx));
+    const cx=r.P.X(tt);r.cur.setAttribute('x1',cx);r.cur.setAttribute('x2',cx);
+    return;
+  }
+  // AF / VT
+  if(D.rhythm==='af'){
+    const k=Math.floor(t*11);
+    r.ra.forEach((c,i)=>c.style.opacity=(Math.sin(i*9.7+k*51.3)*9437.1%1+1)%1>0.45?0.9:0.15);
+    $('#evnow').innerHTML='<b>Now:</b> the atria quiver (no P waves). The AV node passes some impulses to the ventricles at irregular intervals.';
+  }else{
+    r.ra.forEach(c=>c.style.opacity=0);
+    $('#evnow').innerHTML='<b>Now:</b> the ventricles are driven by an ectopic focus near the apex, with slow cell-to-cell spread (wide QRS), at about 180 bpm.';
+  }
+  const cx=r.P.X(tt);r.cur.setAttribute('x1',cx);r.cur.setAttribute('x2',cx);
+}
+
+/* ---------- tab: action potentials ---------- */
+function drawAP(W){
+  const d=D, dr=DR, nsr=d.rhythm==='nsr';
+  const wide=W>=520;
+  const tv0=0.03+d.PR+0.005;
+  const win=Math.max(d.sa.RR+0.07,tv0+d.APD+0.08, dr.sa.RR+0.05);
+  const hSA=wide?120:104, hV=wide?150:126, hC=wide?112:96, hF=optForce?(wide?84:72):0;
+  const gap=16, m={l:48,r:12};
+  const P1=PL(W,hSA,{...m,t:16,b:6},[0,win],[-80,25]);
+  const P2=PL(W,hV,{...m,t:6,b:6},[0,win],[-100,45]);
+  const P3=PL(W,hC,{...m,t:6,b:14},[0,win],[-1.15,1.15]);
+  const P4=PL(W,hF,{...m,t:6,b:14},[0,win],[0,2.3]);
+  const o2=hSA+gap*0.5, o3=o2+hV+gap*0.5, o4=o3+hC+gap;
+  let s='';
+  if(!nsr) s+=`<text class="lb" x="${W/2}" y="14" text-anchor="middle">Action potentials are shown for sinus rhythm settings</text>`;
+  // SA
+  const sa=(dd,n=300)=>{const a=[];for(let i=0;i<=n;i++){const t=i/n*win;a.push([t,saAP(t,dd)])}return a};
+  s+=axes(P1,[],[-60,-40,0],null,'mV');
+  s+=`<text class="lb" x="${P1.m.l+6}" y="12" style="fill:var(--sa)">SA node (pacemaker)</text>`;
+  s+=`<path class="gl" d="M${P1.m.l} ${P1.Y(d.sa.thr)}H${P1.m.l+P1.w}" style="stroke-dasharray:3 3"/><text class="tk" x="${P1.m.l+P1.w-2}" y="${P1.Y(d.sa.thr)-3}" text-anchor="end">threshold</text>`;
+  if(showRef) s+=`<path class="gh" d="${pth(sa(dr),P1)}"/>`;
+  s+=`<path class="cv" style="stroke:var(--sa)" d="${pth(sa(d),P1)}"/>`;
+  const a=d.sa, p4x=P1.X(a.P0+a.P3+a.P4*0.45);
+  s+=`<text class="lb s" x="${P1.X(0.035)}" y="${P1.Y(a.peak)-2}" text-anchor="start">0</text><text class="lb s" x="${P1.X(a.P0+a.P3*0.6)+2}" y="${P1.Y(a.peak*0.2)}" >3</text><text class="lb" x="${p4x}" y="${P1.Y((a.MDP+a.thr)/2)+22}" text-anchor="middle" style="fill:var(--sa)">4: If depolarizes slowly</text>`;
+  // vent
+  s+=`<g transform="translate(0 ${o2})">`+axes(P2,[],[-90,-50,0,30],null,'mV');
+  const ve=(dd,t0)=>{const a=[];for(let i=0;i<=420;i++){const t=i/420*win;a.push([t,veAP(t-t0,dd)])}return a};
+  s+=`<text class="lb" x="${P2.m.l+6}" y="10" style="fill:var(--vent)">Ventricular myocyte</text>`;
+  if(showRef) s+=`<path class="gh" d="${pth(ve(dr,0.03+dr.PR+0.005),P2)}"/>`;
+  s+=`<path class="cv" style="stroke:var(--vent)" d="${pth(ve(d,tv0),P2)}"/>`;
+  const v=d.ve, X=t=>P2.X(tv0+t);
+  const lbl=(t,y,txt,anc='middle')=>`<text class="lb s" x="${X(t).toFixed(1)}" y="${P2.Y(y).toFixed(1)}" text-anchor="${anc}" style="fill:var(--fg);font-weight:500">${txt}</text>`;
+  s+=lbl(0.0,v.peak+6,'0','end')+lbl(0.009,v.peak-10,'1','start')+lbl((0.014+v.t2)/2,v.p2a+10,'2')+lbl((v.t2+v.APD)/2+0.012,v.p2b-16,'3','start')+lbl(v.APD+0.05,v.RMP+12,'4');
+  s+=`<text class="tk" x="${P2.m.l+P2.w-2}" y="${P2.Y(v.RMP)+12}" text-anchor="end">resting ${fx(v.RMP)} mV</text>`;
+  // refractory
+  const rEnd=v.t2+0.035;
+  s+=`<rect x="${X(0)}" y="${P2.Y(-92)}" width="${(X(rEnd)-X(0)).toFixed(1)}" height="4" rx="2" style="fill:var(--faint)"/><text class="lb s" x="${X(rEnd/2)}" y="${P2.Y(-92)-5}" text-anchor="middle">refractory</text>`;
+  s+=`</g>`;
+  // currents
+  s+=`<g transform="translate(0 ${o3})">`+axes(P3,[],[-1,0,1],null,null).replace(/>(-1|1|0)<\/text>/g,m_=>m_==='>-1</text>'?'>in</text>':m_==='>1</text>'?'>out</text>':'><'+'/text>');
+  const tr=(f,col,wd=2)=>{const a=[];for(let i=0;i<=420;i++){const t=i/420*win;a.push([t,f(t)])}return `<path class="cv" style="stroke:var(--${col});stroke-width:${wd}" d="${pth(a,P3)}"/>`};
+  const g=(x,c,w)=>Math.exp(-(x-c)*(x-c)/(2*w*w));
+  const leg=[];
+  if(optCur==='ven'){
+    const t0=tv0;
+    s+=tr(t=>-0.95*g(t,t0+0.002,0.0035),'iNa');
+    s+=tr(t=>0.4*g(t,t0+0.011,0.005),'iTo');
+    s+=tr(t=>{const x=t-t0;return x>0.003&&x<v.t2+0.02?-0.38*(x<0.02?1:Math.max(0,1-(x-0.02)/(v.t2-0.0)*0.9)):0},'iCa');
+    s+=tr(t=>{const x=t-t0;return x<0.01?0:x<v.t2?0.12+0.3*sm((x-0.01)/(v.t2-0.01)):0.75*g(x,v.t2+(v.APD-v.t2)*0.45,(v.APD-v.t2)*0.35)+0.0},'iK');
+    s+=tr(t=>{const x=t-t0;return x<0.004?0.32:x<v.t2?0.03:x<v.APD?0.03+0.3*sm((x-v.t2)/(v.APD-v.t2)):0.32},'iK1',1.6);
+    leg.push(['iNa','Na⁺ (phase 0)'],['iTo','K⁺ transient (1)'],['iCa','Ca²⁺ (2)'],['iK','K⁺ delayed (2–3)'],['iK1','K⁺ resting (4)']);
+  }else{
+    const a=d.sa, t3=a.P0, t4=a.P0+a.P3, ph4=(t)=>{const tau=((t%a.RR)+a.RR)%a.RR;return tau<t4?-1:(tau-t4)/a.P4};
+    const ifa=0.55+0.9*d.s-0.45*d.v;
+    s+=tr(t=>{const x=ph4(t);return x<0?0:-0.30*ifa*(1-0.65*x)},'iF');
+    s+=tr(t=>{const x=ph4(t);return x<0.55?0:-0.22*sm((x-0.55)/0.45)},'iCa',1.6);
+    s+=tr(t=>{const tau=((t%a.RR)+a.RR)%a.RR;return tau<a.P0?-0.95*g(tau,a.P0*0.55,a.P0*0.3):0},'iNa',2.4);
+    s+=tr(t=>{const tau=((t%a.RR)+a.RR)%a.RR;return tau>=a.P0&&tau<t4?0.8*g(tau,a.P0+a.P3*0.4,a.P3*0.28):0},'iK');
+    if(d.v>0.12) s+=tr(t=>{const x=ph4(t);return x<0?0:0.45*d.v*(1-0.5*x)},'iAch',1.6);
+    leg.push(['iF','If (phase 4)'],['iCa','Ca²⁺ (late 4, upstroke)'],['iK','K⁺ (phase 3)']);if(d.v>0.12)leg.push(['iAch','K⁺-ACh (vagal)']);
+  }
+  let lx=P3.m.l+6; for(const [c,tx] of leg){ s+=`<rect x="${lx}" y="${P3.m.t+2}" width="9" height="9" rx="2" style="fill:var(--${c})"/><text class="lb s" x="${lx+13}" y="${P3.m.t+10.5}">${tx}</text>`; lx+=13+tx.length*5.6+12 }
+  s+=`<text class="lb s" x="${P3.m.l+P3.w-2}" y="${P3.m.t+P3.h-3}" text-anchor="end">${optCur==='ven'?'Ventricular':'SA node'} currents (qualitative)</text>`;
+  s+=`</g>`;
+  // force
+  if(optForce){
+    s+=`<g transform="translate(0 ${o4})">`+axes(P4,[],[0,1,2],null,'×');
+    const fa=[],ca=[],fr=[];for(let i=0;i<=420;i++){const t=i/420*win;fa.push([t,forceAt(t-tv0,d)]);ca.push([t,caAt(t-tv0,d)]);if(showRef)fr.push([t,forceAt(t-(0.03+dr.PR+0.005),dr)])}
+    if(showRef) s+=`<path class="gh" d="${pth(fr,P4)}"/>`;
+    s+=`<path class="cv" style="stroke:var(--ca);stroke-width:1.8" d="${pth(ca,P4)}"/><path class="cv" style="stroke:var(--force)" d="${pth(fa,P4)}"/>`;
+    s+=`<text class="lb s" x="${P4.m.l+6}" y="12" style="fill:var(--force)">Contraction force</text><text class="lb s" x="${P4.m.l+110}" y="12" style="fill:var(--ca)">Cytosolic Ca²⁺</text>`;
+    s+=`<text class="lb s" x="${P4.m.l+P4.w-2}" y="${P4.m.t+10}" text-anchor="end">force follows the plateau and peaks near the end of repolarization</text></g>`;
+  }
+  const hTot=(optForce?o4+hF:o3+hC)+16;
+  for(const t of ticks(0,win,win>1?0.25:0.1)){}
+  const axY=hTot-4;
+  s+=`<text class="ax" x="${m.l+(W-m.l-m.r)/2}" y="${axY}" text-anchor="middle">time since the SA node fired (s)</text>`;
+  // time ticks on bottom plot
+  const Pb=optForce?P4:P3, yb=(optForce?o4:o3)+Pb.m.t+Pb.h+13;
+  for(const t of ticks(0,win,win>1?0.25:0.2)) s+=`<text class="tk" x="${Pb.X(t)}" y="${yb}" text-anchor="middle">${t.toFixed(win>1?2:1)}</text>`;
+  s+=`<line id="cur" x1="0" x2="0" y1="${P1.m.t}" y2="${(optForce?o4+hF-14:o3+hC-14)}" style="stroke:var(--fg);stroke-width:1.4;opacity:.8"/>`;
+  setSvg(W,hTot+2,s);
+  refs={P:P1,win,cur:$('#cur'),RR:d.sa.RR};
+  $('#evl').innerHTML='';
+}
+function frAP(t){const x=refs.P.X(wrapT(t,refs.RR));refs.cur.setAttribute('x1',x);refs.cur.setAttribute('x2',x)}
+
+/* ---------- tab: ECG ---------- */
+function drawECG(W){
+  const d=D,dr=DR,nsr=d.rhythm==='nsr';
+  const hS=Math.round(clampW(W*0.2,110,170)), hB=nsr?Math.round(clampW(W*0.5,230,330)):70;
+  const P=PL(W,hS,{l:12,r:12,t:12,b:20},[0,S.W],[-0.6,1.3]);
+  let s='';
+  // grid
+  for(const t of ticks(0,S.W,0.2)) s+=`<path class="gl" d="M${P.X(t)} ${P.m.t}V${P.m.t+P.h}" style="opacity:${Math.abs(t*5-Math.round(t*5))<1e-6&&Math.round(t*5)%5===0?1:0.45}"/>`;
+  s+=`<path class="gl" d="M${P.m.l} ${P.Y(0)}H${W-P.m.r}"/><path class="cv" style="stroke:var(--ecg);stroke-width:1.9" d="${pth(ecgPts(E),P)}"/>`;
+  s+=`<line id="cur" x1="0" x2="0" y1="${P.m.t}" y2="${P.m.t+P.h}" style="stroke:var(--fg);stroke-width:1.4;opacity:.8"/>`;
+  s+=`<text class="lb" x="${P.m.l+2}" y="10" style="fill:var(--ecg)">${{nsr:'Normal sinus rhythm',af:'Atrial fibrillation',vt:'Ventricular tachycardia',vf:'Ventricular fibrillation'}[d.rhythm]} · rhythm strip (${fx(S.W,1)} s)</text>`;
+  for(const t of ticks(0,S.W,0.5)) s+=`<text class="tk" x="${P.X(t)}" y="${P.m.t+P.h+13}" text-anchor="middle">${t.toFixed(1)}</text>`;
+  s+=`<text class="ax" x="${W-14}" y="${P.m.t+P.h+13}" text-anchor="end">s</text>`;
+  refs={P,cur:null,RR:S.W};
+  let H=hS+8;
+  if(nsr){
+    const oy=H+4, hE=Math.round(hB*0.48), hA=hB-hE-8;
+    const tEnd=0.03+d.PR+d.QT+0.12, m={l:48,r:12};
+    const P1=PL(W,hE,{...m,t:14,b:4},[0,tEnd],[-0.45,1.2]), P2=PL(W,hA,{...m,t:4,b:16},[0,tEnd],[-100,45]);
+    const q0=0.03+d.PR, ea=(dd,n=260)=>{const a=[];for(let i=0;i<=n;i++){const t=i/n*tEnd;a.push([t,ecgBeat(t,dd)])}return a};
+    s+=`<g transform="translate(0 ${oy})">`;
+    const bands=[[q0,q0+d.QRS,'QRS · phase 0','var(--act)'],[q0+d.QRS,q0+d.APD-0.07+0.004,'ST · phase 2','var(--ao,#ffc15e)'],[q0+d.APD-0.07+0.004,q0+d.QT,'T · phase 3','var(--force)']];
+    const q0r=0.03+dr.PR;
+    for(const b of bands) s+=`<rect x="${P1.X(b[0]).toFixed(1)}" y="${P1.m.t}" width="${Math.max(1,P1.X(b[1])-P1.X(b[0])).toFixed(1)}" height="${hE+hA-P1.m.t-P2.m.b+4}" style="fill:${b[3]};opacity:.10"/>`;
+    s+=axes(P1,[],[0,1],null,'mV');
+    if(showRef) s+=`<path class="gh" d="${pth(ea(dr),P1)}"/>`;
+    s+=`<path class="cv" style="stroke:var(--ecg);stroke-width:2" d="${pth(ea(d),P1)}"/>`;
+    const lab=(t,y,txt,col)=>`<text class="lb" x="${P1.X(t)}" y="${P1.Y(y)}" text-anchor="middle" style="fill:${col||'var(--ecg)'}">${txt}</text>`;
+    s+=lab(0.065,0.12+0.09,'P')+lab(q0+0.045,1.08,'QRS')+lab(q0+d.QT*0.78,d.Tamp+0.12,'T');
+    // intervals
+    const iy=P1.Y(-0.32), br=(a,b,txt)=>`<path d="M${P1.X(a)} ${iy-3}v6M${P1.X(a)} ${iy}H${P1.X(b)}M${P1.X(b)} ${iy-3}v6" style="stroke:var(--mut);fill:none"/><text class="lb s" x="${(P1.X(a)+P1.X(b))/2}" y="${iy-5}" text-anchor="middle">${txt}</text>`;
+    s+=br(0.03,q0,'PR '+fx(d.PR*1000)+' ms')+br(q0,q0+d.QT,'QT '+fx(d.QT*1000)+' ms');
+    s+=`<text class="lb s" x="${P1.X(q0+d.QRS)+3}" y="${P1.Y(0.42)}" style="fill:var(--fg)">QRS ${fx(d.QRS*1000)} ms</text>`;
+    // AP
+    s+=`<g transform="translate(0 ${hE+4})">`+axes(P2,[],[-90,0],null,'mV');
+    const aa=(dd,t0)=>{const a=[];for(let i=0;i<=300;i++){const t=i/300*tEnd;a.push([t,veAP(t-t0,dd)])}return a};
+    if(showRef) s+=`<path class="gh" d="${pth(aa(dr,0.03+dr.PR+0.005),P2)}"/>`;
+    s+=`<path class="cv" style="stroke:var(--vent)" d="${pth(aa(d,q0+0.005),P2)}"/><text class="lb s" x="${P2.m.l+6}" y="${P2.m.t+10}" style="fill:var(--vent)">Ventricular action potential</text>`;
+    for(const t of ticks(0,tEnd,0.1)) s+=`<text class="tk" x="${P2.X(t)}" y="${P2.m.t+P2.h+13}" text-anchor="middle">${t.toFixed(1)}</text>`;
+    s+=`</g></g>`;
+    H=oy+hB+6;
+    s+=`<text class="lb s" x="${W-14}" y="${oy+12}" text-anchor="end">One beat, aligned: QRS = phase 0, ST = plateau, T = phase 3</text>`;
+  }else{
+    const msg={af:'Atrial fibrillation: no P waves, a wavy baseline, irregularly irregular R-R intervals.',vt:'Ventricular tachycardia: rapid, regular, wide QRS complexes with no P waves.',vf:'Ventricular fibrillation: chaotic, no identifiable QRS complexes. No blood is ejected.'}[d.rhythm];
+    s+=`<text class="lb" x="${W/2}" y="${H+22}" text-anchor="middle" style="font-size:12.5px">${msg}</text>`;
+    s+=`<text class="lb s" x="${W/2}" y="${H+40}" text-anchor="middle">The beat-by-beat view applies to sinus rhythm. Select Sinus rhythm to return.</text>`;
+    H+=58;
+  }
+  setSvg(W,H,s);
+  refs.cur=$('#cur');
+  $('#evl').innerHTML='';
+}
+function clampW(v,a,b){return Math.min(b,Math.max(a,v))}
+function frECG(t){const x=refs.P.X(wrapT(t,S.W));refs.cur.setAttribute('x1',x);refs.cur.setAttribute('x2',x)}
+
+/* mini strip (phones) */
+function drawMini(){
+  const m=$('#mini'); const W=m.clientWidth; if(!W) return;
+  const H=64, P=PL(W,H,{l:6,r:6,t:6,b:6},[0,S.W],[-0.6,1.3]);
+  m.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  m.innerHTML=`<path class="cv" style="stroke:var(--ecg);stroke-width:1.6" d="${pth(ecgPts(E),P)}"/><line id="mcur" x1="0" x2="0" y1="4" y2="${H-4}" style="stroke:var(--fg);stroke-width:1.2;opacity:.7"/>`;
+  refs.mini={P,cur:$('#mcur')};
+}
+
+/* ================= tabs, loop, sheets ================= */
+const TABS=[['cond','Conduction',drawCond,frCond],['ap','Action potentials',drawAP,frAP],['ecg','ECG',drawECG,frECG]];
+function buildTabs(){$('#tabs').innerHTML=TABS.map(t=>`<button type="button" role="tab" data-t="${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}</button>`).join('');$('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)setTab(b.dataset.t)}}
+function setTab(t){tab=t;for(const b of $('#tabs').children)b.classList.toggle('on',b.dataset.t===t);LS.set('cvB_tab',t);redraw()}
+function buildOpts(){
+  const o=$('#opts');
+  if(tab==='ap'){
+    o.innerHTML=`<span class="seg" id="sgCur"><button type="button" data-v="ven" class="${optCur==='ven'?'on':''}">Ventricular currents</button><button type="button" data-v="sa" class="${optCur==='sa'?'on':''}">SA node currents</button></span><label class="chk"><input type="checkbox" id="optF" ${optForce?'checked':''}> <span>Show contraction</span></label>`;
+    $('#sgCur').onclick=e=>{const b=e.target.closest('button');if(!b)return;optCur=b.dataset.v;redraw()};
+    $('#optF').onchange=e=>{optForce=e.target.checked;redraw()};
+  }else o.innerHTML='';
+  $('#refWrap').style.display=(tab==='cond')?'none':'';
+}
+function redraw(){
+  const W=Math.max(300,Math.floor($('.chartwrap').clientWidth-16));
+  const T=TABS.find(t=>t[0]===tab); buildOpts(); T[2](W); drawMini();
+  $('#chart').setAttribute('aria-label',T[1]+' chart');
+}
+function update(){
+  D=derive(st); S=schedule(D); E=ecgSeries(D,S); setDelays(D);
+  $('#refName').textContent=pinned?'pinned reference':'rest';
+  syncCtl();syncChips();explain();redraw();
+}
+let lastT=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-lastT)/1000);lastT=now;
+  if(!paused) clock+=dt*speed;
+  try{ TABS.find(t=>t[0]===tab)[3](clock); if(refs.mini){const x=refs.mini.P.X(wrapT(clock,S.W));refs.mini.cur.setAttribute('x1',x);refs.mini.cur.setAttribute('x2',x)} }catch(e){}
+  requestAnimationFrame(loop);
+}
+const OBJ=[
+ {t:'Describe the components of the cardiac conduction system and their roles',tab:'cond',try:'Conduction tab. Follow the wave: SA node, atria, AV node, His bundle, bundle branches, Purkinje fibers. Where is the delay, and why does it matter?'},
+ {t:'Differentiate ventricular and SA node action potentials, including phases and ion channel activity',tab:'ap',try:'Action potentials tab. Compare resting potential, phase 4, phase 0 and the plateau. Switch between ventricular and SA node currents.'},
+ {t:'Explain excitation-contraction coupling and its relationship to the action potential',tab:'ap',opt:{force:true},try:'Turn on Show contraction. When does force start, peak and relax relative to the action potential? Raise sympathetic activity and look at force and AP duration.',setP:{sym:70}},
+ {t:'Interpret the ECG and correlate its waves with electrical and mechanical events',tab:'ecg',try:'ECG tab. Match P, QRS and T to atrial depolarization, ventricular depolarization and repolarization, then to phases 0, 2 and 3 of the ventricular action potential.'},
+ {t:'Identify common arrhythmias and their effect on cardiac function',tab:'ecg',try:'Select atrial fibrillation, ventricular tachycardia and ventricular fibrillation. For each, what happens to the P wave and QRS, and to pumping?',setP:{rhythm:'af'}},
+ {t:'Discuss autonomic regulation of heart rate',tab:'ap',try:'Set sympathetic activity high with no vagal tone, then the reverse. Watch the SA node phase 4 slope and threshold. What happens at 0% and 0%?',setP:{sym:80,vag:0}},
+ {t:'Analyze the effects of exercise on heart rate and arrhythmia risk',tab:'ecg',try:'Drag Exercise intensity from 0 to 100%. Which input changes first? Then read the exercise note about arrhythmia risk.',setP:{ex:60}},
+];
+const LAB=[
+ 'Part 1 mini-lab (heart rate and intensity): drag Exercise intensity and note where vagal withdrawal ends and sympathetic drive takes over.',
+ 'Acute item 1 (heart rate rises roughly with intensity): which autonomic inputs explain the rise?',
+ 'Chronic items 1 and 2 (lower resting HR and lower HR at a fixed workload): load Athlete at rest and compare phase 4 slope and PR interval.',
+ 'Link to the hemodynamics model: faster heart rate shortens diastole, which changes filling and stroke volume.',
+];
+function openSheet(id){$(id).classList.add('open');$(id).querySelector('button').focus()}
+function buildSheets(){
+  const done=(LS.get('cvB_obj')||'').split(',');
+  $('#objList').innerHTML=OBJ.map((o,i)=>`<div class="obj"><input type="checkbox" id="o${i}" ${done.includes(String(i))?'checked':''} aria-label="Done"><div class="t">${o.t}</div><div class="try">${o.try}</div><button type="button" data-i="${i}">Set up</button></div>`).join('');
+  $('#objList').addEventListener('change',()=>{const d=[];OBJ.forEach((o,i)=>{if($('#o'+i).checked)d.push(i)});LS.set('cvB_obj',d.join(','))});
+  $('#objList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const o=OBJ[+b.dataset.i];st={...REST,...(o.setP||{})};sceneNote=null;last=o.setP?Object.keys(o.setP)[0]:'intro';if(o.opt&&o.opt.force)optForce=true;$('#shObj').classList.remove('open');tab=o.tab;buildTabs();update();document.querySelector('.stage').scrollIntoView({block:'start'})});
+  $('#labList').innerHTML=LAB.map(x=>`<li>${x}</li>`).join('');
+  $('#bObj').onclick=()=>openSheet('#shObj');$('#bAbout').onclick=()=>openSheet('#shAbout');
+  for(const sh of document.querySelectorAll('.sheet'))sh.addEventListener('click',e=>{if(e.target===sh||e.target.hasAttribute('data-close'))sh.classList.remove('open')});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.sheet.open').forEach(s=>s.classList.remove('open'))});
+}
+buildCtl();buildChips();buildSheets();
+const saved=LS.get('cvB_tab');if(saved&&TABS.some(t=>t[0]===saved))tab=saved;
+buildTabs();
+$('#showRef').onchange=e=>{showRef=e.target.checked;redraw()};
+$('#spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.v;for(const x of $('#spd').children)x.classList.toggle('on',x===b)};
+$('#pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'Play':'Pause';e.target.setAttribute('aria-pressed',paused)};
+if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches){paused=true;$('#pause').textContent='Play';$('#pause').setAttribute('aria-pressed','true')}
+update();
+let rz;new ResizeObserver(()=>{clearTimeout(rz);rz=setTimeout(redraw,60)}).observe($('.chartwrap'));
+requestAnimationFrame(loop);
+window.__cv={st:()=>st,d:()=>D,setTab,applyScn,setP:(o)=>{st={...st,...o};sceneNote=null;update()}};
+})();
+</script>
+</body>
+</html>
