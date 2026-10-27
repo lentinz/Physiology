@@ -5,12 +5,15 @@ Course director: Zachary Lentini, PT, DPT
 
 Two interactive, browser-based models for reviewing the cardiovascular lecture (Dr. Anu Kalyanasundaram, *Cardiovascular System*). They are meant for post-lecture review and self-study: change one factor and see how the others respond.
 
-| Model | File | What it shows |
+| Model | Link | What it shows |
 |---|---|---|
-| Cardiac Hemodynamics | [`cv-hemodynamics.html`](cv-hemodynamics.html) | How heart rate, preload, afterload, contractility, blood volume and venous return affect stroke volume, ejection fraction, cardiac output and blood pressure |
-| Cardiac Electrophysiology | [`cv-electrophysiology.html`](cv-electrophysiology.html) | Conduction, SA node vs ventricular action potentials, autonomic control of heart rate, the ECG, and common arrhythmias |
+| Cardiac Hemodynamics | [Open the hemodynamics model](https://lentils.github.io/Physiology/cv-hemodynamics.html) | How heart rate, preload, afterload, contractility, blood volume and venous return affect stroke volume, ejection fraction, cardiac output and blood pressure |
+| Cardiac Electrophysiology | [Open the electrophysiology model](https://lentils.github.io/Physiology/cv-electrophysiology.html) | Conduction, SA node vs ventricular action potentials, autonomic control of heart rate, the ECG, and common arrhythmias |
 
-**Live version:** `https://<username>.github.io/<repo>/` (replace after enabling GitHub Pages; see below).
+**Live versions (GitHub Pages):**
+
+- Hemodynamics: <https://lentils.github.io/Physiology/cv-hemodynamics.html>
+- Electrophysiology: <https://lentils.github.io/Physiology/cv-electrophysiology.html>
 
 ## Hemodynamics model
 
