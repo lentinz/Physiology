@@ -223,21 +223,28 @@ svg text{font-family:var(--sans)}
   <h2>About this model</h2>
   <p>This is a simplified, qualitative model of the left ventricle, the arteries and the veins, for normal physiology and exercise. It shows direction and relative size of change, not values for a real person. Taylor, the typical person, starts at HR 70 bpm, EDV 120 mL, ESV 50 mL, SV 70 mL, EF 58%, CO 4.9 L/min and BP 120/80 mmHg, in line with the representative values in the lecture.</p>
   <ul>
-    <li>Drew, Taylor and Elliot are three illustrative 30-year-olds who differ only in fitness. Their numbers are modeled to follow the Lab 5 adaptations (resting heart rate lower and stroke volume higher with training, maximal heart rate unchanged, higher maximal output through stroke volume). They are illustrations, not measured data.</li>
+    <li>Drew, Taylor and Elliot are three illustrative 30-year-olds who differ only in fitness. Their numbers are modeled to follow the adaptations covered in Module 3, Lab 5 (resting heart rate lower and stroke volume higher with training, maximal heart rate unchanged, higher maximal output through stroke volume). They are illustrations, not measured data. Resting pressure is set a few mmHg higher in Drew and a few lower in Elliot; trials in people with normal pressure find only small training effects at rest (Cornelissen &amp; Smart 2013), so treat these differences as small and illustrative.</li>
     <li>Cardiac output equals venous return in the steady state. The model finds the filling pressure where what the veins return equals what the heart pumps.</li>
     <li>Preload (filling pressure, set by venous return) moves the heart along the end-diastolic pressure-volume curve. Contractility changes the slope of the end-systolic curve. Afterload is the arterial pressure the ventricle must reach to eject. Heart rate sets the time available for filling.</li>
     <li>BP = cardiac output × resistance. Pulse pressure rises with stroke volume and with faster ejection.</li>
     <li>The exercise slider moves heart rate, contractility, muscle pump, venoconstriction, breathing and resistance together toward a maximal effort. Maximal heart rate is set to 190 bpm. Stroke volume plateaus in the middle of the range in the typical person (Powers Ch. 9).</li>
+    <li>The Heavy lift scenario is a brief surge of resistance and heart rate with little change in output. It shows direction only: direct arterial recordings in lifters show far larger peaks, helped by a held breath and compression of the working muscle (MacDougall 1985, 1992), which the model does not reproduce.</li>
     <li>The reflex switch adds a simple baroreflex: a fall in mean pressure raises heart rate, contractility, venous tone and resistance.</li>
     <li>Right-heart, lung and valve details are not modeled. Disease states are not part of this version.</li>
   </ul>
   <h4>Sources</h4>
   <ul>
     <li>Kalyanasundaram A. <i>Cardiovascular System: Cardiac Function, Electrophysiology and Blood Circulation</i> (lecture slides, Structure and Mechanics). DPHT 7223, UNT Health Fort Worth, Fall 2026.</li>
-    <li>Berne &amp; Levy, <i>Physiology</i>, 6th ed. (figures cited in the lecture slides: pressure-volume loops, factors affecting cardiac output, heart rate and cardiac output).</li>
+    <li>Berne &amp; Levy, <i>Physiology</i>, 6th ed. This is the source the lecture slides credit for several figures (pressure-volume loops, factors affecting cardiac output, heart rate and cardiac output). It was not consulted directly for this model.</li>
     <li>Powers SK, Howley ET, Quindry JC. <i>Exercise Physiology: Theory and Application to Fitness and Performance</i>, 12th ed., Chapter 9, Circulatory Responses to Exercise (stroke volume regulation, venous return mechanisms, Table 9.2).</li>
-    <li>DPHT 7223 Module 3, Lab 5: Cardiovascular Demands &amp; Responses to Physical Activity.</li>
+    <li>DPHT 7223 Module 3, Lab 5: Cardiovascular Demands &amp; Responses to Physical Activity (adaptation pattern for the three people).</li>
+    <li>Cohen DL, Townsend RR. Exaggerated systolic blood pressure response to exercise. <i>J Clin Hypertens</i> 2007;9(4):291-292. Normal response to dynamic exercise: systolic rises, diastolic unchanged or slightly lower; cardiac output up and peripheral resistance down. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8109871" target="_blank" rel="noopener">PMC</a></li>
+    <li>MacDougall JD, Tuxen D, Sale DG, Moroz JR, Sutton JR. Arterial blood pressure response to heavy resistance exercise. <i>J Appl Physiol</i> 1985;58(3):785-790. <a href="https://pubmed.ncbi.nlm.nih.gov/3980383/" target="_blank" rel="noopener">PubMed</a></li>
+    <li>MacDougall JD, McKelvie RS, Moroz DE, Sale DG, McCartney N, Buick F. Factors affecting blood pressure during heavy weight lifting and static contractions. <i>J Appl Physiol</i> 1992;73(4):1590-1597. <a href="https://paulogentil.com/pdf/Factors%20affecting%20blood%20pressure%20during%20heavy%20weight%20lifting%20and%20static%20contractions.pdf" target="_blank" rel="noopener">PDF</a></li>
+    <li>Cornelissen VA, Smart NA. Exercise training for blood pressure: a systematic review and meta-analysis. <i>J Am Heart Assoc</i> 2013;2:e004473. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3603230" target="_blank" rel="noopener">PMC</a></li>
   </ul>
+  <h4>What is and is not sourced</h4>
+  <p>Values for the typical person, the exercise pattern and the venous-return and Frank-Starling relationships follow the lecture slides and the Powers chapter. Normal ranges on the Overview are typical textbook values, not taken from one source. Everything for Drew, Elliot and the heavy lift is a modeled illustration anchored only to the pattern in the sources above, and the model's parameters are tuned by hand.</p>
   <p class="warn">This model was AI-generated and may contain errors. If anything here differs from the official course materials, the official course materials take precedence.</p>
   <button class="close" type="button" data-close>Close</button>
 </div></div>
@@ -247,9 +254,9 @@ svg text{font-family:var(--sans)}
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const K={V0:20,b:0.0195,P0:1.33,V0es:10,Ees:2.9,Ca:1.75,TPR0:18.4,Rv0:0.816,Pmsf0:7,HRmax:190,tau0:0.15,lus:0.25,stiffTau:1.0,mpP:0.06,mpR:0.45,resExp:0.35,resDrop:0.76,conEx:1.0,ppExp:0.35,vexp:2,post:1.6,tpk:0.02,baroG:0.05};
 const PERSON={
-  D:{name:'Drew',HR0:80,con:0.91,stiff:1.35,bv:6,res:0.95,conEx:0.85},
+  D:{name:'Drew',HR0:80,con:0.91,stiff:1.35,bv:6,res:1.03,conEx:0.85},
   T:{name:'Taylor',HR0:70,con:1,stiff:1,bv:0,res:1.0,conEx:1.0},
-  E:{name:'Elliot',HR0:50,con:1.05,stiff:0.75,bv:2,res:0.9,conEx:1.0}
+  E:{name:'Elliot',HR0:50,con:1.05,stiff:0.75,bv:2,res:0.92,conEx:1.0}
 };
 const REST={HR:70,con:100,stiff:100,res:100,bv:100,tone:50,mp:0,tp:30,post:0,ex:0,baro:0,person:'T'};
 function effective(p,d){
@@ -369,8 +376,11 @@ const SCN=[
  ['stand','Stand up',{post:1}],
  ['standmp','Stand + calf pump',{post:1,mp:40}],
  ['breath','Deep breathing',{tp:90}],
+ ['end','Endurance exercise',{ex:50}],
+ ['lift','Heavy lift (short peak)',{res:170,dHR:30,lift:1}],
+ ['standbaro','Stand up + reflex',{post:1,baro:1}],
 ];
-const SCN_TAB={circ:['rest','ex50','ex100','stand','standmp','breath'],pv:['rest','ex50','ex100','stand'],cyc:['rest','ex50','ex100'],fs:['rest','stand','standmp','breath','ex50'],hr:['rest','ex50','ex100'],vr:['rest','stand','standmp','breath','ex50']};
+const SCN_TAB={circ:['rest','ex50','ex100','stand','standmp','breath'],pv:['rest','ex50','ex100','stand'],cyc:['rest','ex50','ex100'],fs:['rest','stand','standmp','breath','ex50'],hr:['rest','ex50','ex100'],bp:['rest','end','lift','stand','standbaro']};
 function buildCtl(){
   let h=`<h3>Person</h3><div class="pers" id="pers">${['D','T','E'].map(p=>`<button type="button" data-p="${p}"><b>${PN[p]}</b><span>${PS[p]}</span></button>`).join('')}</div>
   <h3>Dashed line shows</h3><div class="cmp" id="cmp"><button type="button" data-m="typ">Typical person, same activity</button><button type="button" data-m="rest">This person at rest</button></div><p class="cap" id="cmpcap"></p>
@@ -400,7 +410,7 @@ function setPerson(p){
 }
 function buildScn(){
   const ids=SCN_TAB[tab]||SCN_TAB.circ;
-  $('#scn').innerHTML=SCN.filter(s=>ids.includes(s[0])).map(s=>`<button type="button" data-s="${s[0]}">${s[1]}</button>`).join('');
+  $('#scn').innerHTML=ids.map(i=>SCN.find(s=>s[0]===i)).map(s=>`<button type="button" data-s="${s[0]}">${s[1]}</button>`).join('');
 }
 function syncCtl(){
   for(const c of CT){
@@ -420,7 +430,7 @@ function syncCtl(){
     : cmpMode==='typ' ? `Dashed line: Taylor (typical) doing the same thing as ${PN[st.person]} right now.` : `Dashed line: ${PN[st.person]} at rest.`;
 }
 function applyScn(id){
-  const s=SCN.find(x=>x[0]===id); st={...restFor(st.person),...s[2]}; sceneNote=id; last='scn:'+id; update();
+  const s=SCN.find(x=>x[0]===id); st={...restFor(st.person),...s[2]}; if(s[2].dHR!=null){st.HR=clampv(PERSON[st.person].HR0+s[2].dHR,40,200);delete st.dHR} sceneNote=id; last='scn:'+id; update();
 }
 
 /* ---------------- readouts ---------------- */
@@ -513,13 +523,16 @@ const PERSON_TXT={
  D:(c,r)=>`Drew (deconditioned): HR <b class="n">${fx(c.HR)}</b> bpm, SV <b class="n">${fx(c.SV)}</b> mL, CO <b class="n">${fx(c.CO,1)}</b> L/min at rest, compared with Taylor's 70, 70 and 4.9. A smaller stroke volume is made up for by a faster heart rate, so resting output stays about the same.`,
  E:(c,r)=>`Elliot (endurance-trained): HR <b class="n">${fx(c.HR)}</b> bpm, SV <b class="n">${fx(c.SV)}</b> mL, CO <b class="n">${fx(c.CO,1)}</b> L/min at rest, compared with Taylor's 70, 70 and 4.9. A larger stroke volume lets the heart beat more slowly to deliver the same output.`
 };
-const PERSON_META={T:'Now run Maximal exercise for each person and compare.',D:'Lab 5 chronic items run in reverse: low fitness means higher resting HR and smaller SV. Now run Maximal exercise and compare with Taylor.',E:'Lab 5 chronic items: resting HR ↓, SV ↑, resting CO about the same. Now run Maximal exercise: HRmax is unchanged, so the higher maximal CO comes from SV.'};
+const PERSON_META={T:'Now run Maximal exercise for each person and compare.',D:'Low fitness goes with a higher resting HR and a smaller SV. Resting pressure is a few mmHg higher in this model; differences between healthy 30-year-olds are small. Now run Maximal exercise and compare with Taylor.',E:'Training lowers resting HR and raises SV while resting CO stays about the same. Resting pressure is a few mmHg lower here. Now run Maximal exercise: maximal HR is unchanged, so the higher maximal CO comes from SV.'};
 const SCENE={
  rest:{t:(c)=>st.person==='T'?'Taylor at rest: HR 70 bpm, EDV 120 mL, ESV 50 mL, SV 70 mL, EF 58%, CO 4.9 L/min, BP 120/80 mmHg.':PERSON_TXT[st.person](c),m:'These match the representative values in the lecture. Use Taylor at rest as the reference.'},
- ex50:{t:(c,r)=>`Moderate exercise: HR ${arrow(r.HR,c.HR)}, SV ${arrow(r.SV,c.SV)} mL, CO ${arrow(r.CO,c.CO,1)} L/min. Systolic BP ${fx(c.Psys)}, diastolic ${fx(c.Pdia)}. The loop widens and shifts right (more filling) with a lower ESV (more contractility).`,m:'Lab 5 acute items: HR ↑, SV ↑, CO ↑, SBP ↑, DBP about the same, resistance ↓. Next, drag the intensity slider to 100% and watch SV stop rising.'},
+ ex50:{t:(c,r)=>`Moderate exercise: HR ${arrow(r.HR,c.HR)}, SV ${arrow(r.SV,c.SV)} mL, CO ${arrow(r.CO,c.CO,1)} L/min. Systolic BP ${fx(c.Psys)}, diastolic ${fx(c.Pdia)}. The loop widens and shifts right (more filling) with a lower ESV (more contractility).`,m:'Expected pattern: HR ↑, SV ↑, CO ↑, SBP ↑, DBP about the same, resistance ↓. Next, drag the intensity slider to 100% and watch SV stop rising.'},
  ex100:{t:(c,r)=>`Maximal effort: HR ${arrow(r.HR,c.HR)}, SV ${arrow(r.SV,c.SV)} mL, CO ${arrow(r.CO,c.CO,1)} L/min, about ${fx(c.CO/r.CO,1)} times rest. Cardiac reserve is the difference between maximal and resting output.`,m:'Powers Table 9.2: untrained male about 200 × 110 mL ≈ 22 L/min. Short filling time at high rates limits SV. Try the other two people.'},
- stand:{t:(c,r)=>`Standing with no reflex: blood pools in the legs, so venous return falls. EDV ${arrow(r.EDV,c.EDV)} mL, SV ${arrow(r.SV,c.SV)} mL, BP ${fx(c.Psys)}/${fx(c.Pdia)}.`,m:'This is the Lab 5 orthostatic case. Now turn the reflex on, or add calf pumping, and see what restores pressure.'},
+ stand:{t:(c,r)=>`Standing with no reflex: blood pools in the legs, so venous return falls. EDV ${arrow(r.EDV,c.EDV)} mL, SV ${arrow(r.SV,c.SV)} mL, BP ${fx(c.Psys)}/${fx(c.Pdia)}.`,m:'Now turn the reflex on, or add calf pumping, and see what restores pressure.'},
  standmp:{t:(c,r)=>`Standing and pumping the calves: the muscle pump returns pooled blood. EDV ${arrow(r.EDV,c.EDV)} mL, SV ${arrow(r.SV,c.SV)} mL, CO ${arrow(r.CO,c.CO,1)} L/min.`,m:'Muscle pump = "second heart". Compare with Stand up.'},
+ end:{t:(c,r)=>`Endurance exercise (walking, running, cycling): HR ${arrow(r.HR,c.HR)}, CO ${arrow(r.CO,c.CO,1)} L/min, about ${fx(c.CO/r.CO,1)} times rest, while resistance falls to ${fx(c.e.res*100)}% of its resting value. Systolic pressure ${arrow(r.Psys,c.Psys)} mmHg, diastolic ${arrow(r.Pdia,c.Pdia)} mmHg.`,m:'Output rises several-fold, resistance falls in the working muscle, so systolic rises only modestly and diastolic barely changes.'},
+ lift:{t:(c,r)=>`Heavy lift, a short-lived peak and not a steady state: the contracting muscle squeezes its own vessels, so resistance rises to ${fx(c.e.res*100)}% of rest, and heart rate rises. CO barely changes (${arrow(r.CO,c.CO,1)} L/min), so pressure climbs mainly through resistance: ${arrow(r.Psys,c.Psys)} over ${arrow(r.Pdia,c.Pdia)} mmHg.`,m:'Both systolic and diastolic rise, the opposite of endurance exercise. Held-breath effort adds chest pressure that is not modeled, so real peaks are higher. Direction only. Coaching: exhale during the effort and avoid prolonged gripping.'},
+ standbaro:{t:(c,r)=>`Standing with the reflex on: HR ${arrow(r.HR,c.HR)}, resistance ${fx(c.e.res*100)}% of rest, SV ${arrow(r.SV,c.SV)} mL. Systolic ${fx(c.Psys)}, diastolic ${fx(c.Pdia)} mmHg.`,m:'The baroreflex raises heart rate and resistance to defend pressure. Compare with Stand up.'},
  breath:{t:(c,r)=>`Deep breathing: inspiration lowers chest pressure and pulls blood toward the heart. EDV ${arrow(r.EDV,c.EDV)} mL, SV ${arrow(r.SV,c.SV)} mL.`,m:'Thoracic (respiratory) pump. Powers: dominant for venous return in upright exercise.'}
 };
 
@@ -530,7 +543,7 @@ const CONCEPT={
  cyc:{title:'The cardiac cycle',html:`<p>One heartbeat, with pressure, volume and the ECG lined up in time. Valves open and close passively with pressure differences: the <b>aortic valve</b> opens when ventricular pressure rises above aortic pressure and closes when it falls below. The <b>mitral valve</b> is open only while the ventricle fills. When both valves are shut, the ventricle is in an isovolumic phase.</p><p>The electrical signal comes just before the mechanical event it triggers. Tap a trace, or its ?, for a closer look.</p>`},
  fs:{title:'Frank-Starling law',html:`<p>The more the ventricle is filled and stretched before it contracts, the more forcefully it contracts, so the more blood it ejects. A bigger EDV gives a stronger next beat and a bigger stroke volume, up to the point where the fibers are stretched past their maximum length.</p><p><b>Moving along the curve</b> means preload changed (venous return, blood volume, posture, breathing). <b>Shifting the curve</b> means something else changed, such as contractility or heart rate. The dashed curve is the comparison.</p>`},
  hr:{title:'Heart rate, stroke volume and output',html:`<p><b>Cardiac output = heart rate × stroke volume.</b> The curves show what would happen at every heart rate with everything else held the same. The dots mark where the heart is right now, so dragging the heart rate slider moves the dots along fixed curves.</p><p>As heart rate rises, filling time shrinks, so stroke volume falls. Output still rises through the normal range because the extra beats more than make up for it. It levels off near the top of the physiological range (about 160 to 200 bpm) and falls above about 200 bpm. Normal resting HR is about 60 to 100 bpm and maximal HR is about 220 minus age.</p>`},
- vr:{title:'Venous return',html:`<p>The heart can only pump out what the veins bring back. At steady state, <b>cardiac output = venous return</b>, so anything that changes venous return changes filling, stroke volume and output.</p><p>Each bar shows how much a factor changes the pressure that pushes blood toward the heart: <b>blood volume</b>, <b>venomotor tone</b> (venoconstriction), the <b>muscle pump</b> and <b>breathing</b> push it up, and <b>gravity</b> when standing pulls it down.</p>`}
+ bp:{title:'Blood pressure',html:`<p><b>Blood pressure ≈ cardiac output × resistance.</b> The two inputs on top set the three pressures below: systolic (peak), diastolic (lowest) and mean.</p><ul><li><b>Endurance exercise:</b> output rises several-fold, but resistance falls in the working muscle. Systolic rises modestly and diastolic stays about the same.</li><li><b>Heavy lift:</b> the squeezed muscle raises resistance, and output barely changes. Systolic and diastolic both rise, and the peak is brief.</li><li><b>Standing:</b> pooling lowers filling and output. The reflex raises heart rate and resistance to protect pressure.</li></ul>`}
 };
 const CIRC_HELP={
  ven:{title:'Veins',html:`<p>This box shows how full the venous system is. About two-thirds of your blood sits in the veins, so small changes here matter. The fill level follows the pressure pushing blood back toward the heart, and the number is right atrial pressure (RAP).</p><p>It rises with more blood volume, venoconstriction (venomotor tone), the muscle pump and deep breathing, and falls when gravity pools blood in the legs on standing. Try <b>Stand up</b>, then <b>Stand + calf pump</b>.</p>`},
@@ -806,36 +819,37 @@ function drawHR(W){
   setSvg(W,H,s);
 }
 
-/* ---------------- tab: venous return (bar list) ---------------- */
-function drawVR(W){
-  const names={vol:'Blood volume',tone:'Venomotor tone',mp:'Muscle pump',tp:'Breathing',post:'Gravity (standing)'};
-  const keys=['vol','tone','mp','tp','post'], rowH=34;
-  const narrow=W<460, lw=narrow?112:150;
-  const x0=lw+14, avail=W-x0-60, bx0=x0+avail*0.5, scale=avail*0.46/8;
-  let y=8; let s='';
-  const dco=cur.CO-ref.CO;
-  s+=`<text class="lb" x="12" y="${y+14}" style="font-size:14px;fill:var(--co)">Venous return = cardiac output = ${fx(cur.CO,1)} L/min</text>`;
-  s+=`<text class="lb s" x="12" y="${y+31}">${Math.abs(dco)>=0.05?(dco>0?'▲ +':'▼ −')+fx(Math.abs(dco),1)+' L/min vs the dashed comparison':'Same as the dashed comparison'}</text>`;
-  y+=48;
-  s+=`<text class="lb" x="12" y="${y+4}">Change in the pressure pushing blood to the heart, compared with rest (mmHg)</text>`; y+=14;
-  s+=`<text class="lb s" x="${bx0-6}" y="${y+10}" text-anchor="end">less return</text><text class="lb s" x="${bx0+6}" y="${y+10}">more return</text>`; y+=18;
-  const top=y;
-  keys.forEach((k,i)=>{const v=cur.gP[k], rv=ref.gP[k], yy=top+i*rowH;
-    s+=`<text class="lb" x="12" y="${yy+rowH/2+4}" style="font-size:12.5px">${names[k]}</text>`;
-    s+=`<rect x="${x0}" y="${yy+3}" width="${avail}" height="${rowH-6}" rx="5" style="fill:var(--panel2)"/><path d="M${bx0} ${yy}V${yy+rowH}" style="stroke:var(--faint)"/>`;
-    const w=clamp(v,-8,8)*scale;
-    s+=`<rect x="${(w>=0?bx0:bx0+w).toFixed(1)}" y="${yy+7}" width="${Math.max(Math.abs(w),0.01).toFixed(1)}" height="${rowH-14}" rx="3" style="fill:${v>=0?'var(--co)':'var(--svc)'}"/>`;
-    if(showRef){const xr=bx0+clamp(rv,-8,8)*scale;s+=`<path d="M${xr.toFixed(1)} ${yy+2}v${rowH-4}" style="stroke:var(--fg);stroke-width:2;stroke-dasharray:3 2"/>`}
-    s+=`<text class="lb" x="${W-10}" y="${yy+rowH/2+4}" text-anchor="end" style="font:500 12px var(--mono)">${v>=0?'+':'−'}${Math.abs(v).toFixed(1)}</text>`;
-  });
-  y=top+keys.length*rowH+14;
-  s+=`<text class="lb s" x="12" y="${y}">${showRef?'Dashed tick = comparison value. ':''}At rest every bar sits at zero: bars show how far each factor moves from rest.</text>`; y+=16;
-  // chain
-  const ch=[['Venous return',cur.CO,'L/min',1],['Filling (EDV)',cur.EDV,'mL',0],['Stroke volume',cur.SV,'mL',0],['Cardiac output',cur.CO,'L/min',1]];
-  const cw=(W-24-3*14)/4; ch.forEach((c,i)=>{const x=12+i*(cw+14);s+=`<rect x="${x.toFixed(1)}" y="${y}" width="${cw.toFixed(1)}" height="46" rx="8" style="fill:var(--panel2);stroke:var(--line)"/><text class="lb s" x="${(x+cw/2).toFixed(1)}" y="${y+16}" text-anchor="middle" style="stroke:none">${c[0]}</text><text class="lb" x="${(x+cw/2).toFixed(1)}" y="${y+36}" text-anchor="middle" style="stroke:none;font:500 13px var(--mono)">${fx(c[1],c[3])} ${c[2]}</text>`;if(i<3)s+=`<text class="lb" x="${(x+cw+7).toFixed(1)}" y="${y+28}" text-anchor="middle" style="stroke:none">→</text>`});
-  y+=62;
-  if(details){ s+=`<text class="lb s" x="12" y="${y}">Mean systemic filling pressure ${fx(cur.Pmsf,1)} mmHg · venous resistance ${fx(cur.Rv/K.Rv0*100)}% of rest (the muscle pump also lowers it)</text>`; y+=16 }
-  setSvg(W,y+4,s);
+/* ---------------- tab: blood pressure ---------------- */
+function drawBP(W){
+  const narrow=W<460, lw=narrow?104:150, x0=lw+16, avail=W-x0-84;
+  const rowH=34; let y=8, s='';
+  const row=(name,sub,v,rv,max,fmt,col)=>{
+    const w=clampv(v/max,0,1)*avail, wr=clampv(rv/max,0,1)*avail, yy=y;
+    s+=`<text class="lb" x="12" y="${yy+rowH/2+(sub?0:4)}" style="font-size:12.5px">${name}</text>${sub?`<text class="lb s" x="12" y="${yy+rowH/2+13}">${sub}</text>`:''}`;
+    s+=`<rect x="${x0}" y="${yy+4}" width="${avail}" height="${rowH-8}" rx="5" style="fill:var(--panel2)"/><rect x="${x0}" y="${yy+7}" width="${Math.max(w,1).toFixed(1)}" height="${rowH-14}" rx="3" style="fill:${col}"/>`;
+    if(showRef) s+=`<path d="M${(x0+wr).toFixed(1)} ${yy+2}v${rowH-4}" style="stroke:var(--fg);stroke-width:2;stroke-dasharray:3 2"/>`;
+    s+=`<text class="lb" x="${W-10}" y="${yy+rowH/2+4}" text-anchor="end" style="font:500 12px var(--mono)">${fmt(v)}</text>`;
+    y+=rowH+4;
+  };
+  s+=`<text class="lb" x="12" y="${y+14}" style="font-size:13px;fill:var(--co)">Blood pressure = cardiac output × resistance</text>`; y+=26;
+  s+=`<text class="cl" x="12" y="${y+8}" style="fill:var(--mut)">INPUTS</text>`; y+=14;
+  row('Cardiac output','',cur.CO,ref.CO,Math.max(30,niceMax(cur.CO*1.1,5)),v=>fx(v,1)+' L/min','var(--co)');
+  row('Resistance','vessel narrowing',cur.e.res*100,ref.e.res*100,Math.max(200,niceMax(cur.e.res*110,20)),v=>fx(v)+'% rest','var(--svc)');
+  y+=6; s+=`<text class="cl" x="12" y="${y+8}" style="fill:var(--mut)">RESULT (mmHg)</text>`; y+=14;
+  const pm=Math.max(220,niceMax(cur.Psys*1.08,20));
+  row('Systolic','peak pressure',cur.Psys,ref.Psys,pm,v=>fx(v),'var(--pres)');
+  row('Mean','average pressure',cur.MAP,ref.MAP,pm,v=>fx(v),'var(--ao)');
+  row('Diastolic','lowest pressure',cur.Pdia,ref.Pdia,pm,v=>fx(v),'var(--ven)');
+  y+=4;
+  const r1=cur.CO/ref.CO, r2=cur.e.res/ref.e.res;
+  const cmp=(n,x)=>`${n} ${Math.abs(x-1)<0.02?'unchanged':(x>1?'×'+fx(x,1):'×'+fx(x,2))}`;
+  s+=`<text class="lb s" x="12" y="${y+10}" style="fill:var(--fg)">${showRef?'Compared with the dashed marks: ':'Compared with rest: '}${cmp('output',r1)} · ${cmp('resistance',r2)}</text>`; y+=18;
+  if(st.lift) s+=`<text class="lb" x="12" y="${y+10}" style="fill:var(--svc)">Short-lived peak during the lift, not a steady state. Direction only.</text>`, y+=18;
+  if(showRef) s+=`<text class="lb s" x="12" y="${y+10}">Dashed tick = comparison value</text>`, y+=18;
+  if(details){
+    s+=`<text class="lb s" x="12" y="${y+10}">Pulse pressure ${fx(cur.Psys-cur.Pdia)} mmHg (systolic − diastolic) · stroke volume ${fx(cur.SV)} mL · mean ≈ CO × resistance + venous pressure ${fx(cur.RAP,1)}</text>`; y+=18;
+  }
+  setSvg(W,y+6,s);
 }
 
 /* ---------------- tab: circulation (four boxes) ---------------- */
@@ -963,7 +977,7 @@ function frCirc(t,dt){
 const clamp=clampv;
 
 /* ---------------- tabs, render loop ---------------- */
-const TABS=[['ov','Overview',drawOv],['circ','Circulation',drawCirc],['pv','PV loop',drawPV],['cyc','Cardiac cycle',drawCycle],['fs','Frank-Starling',drawFS],['hr','HR and output',drawHR],['vr','Venous return',drawVR]];
+const TABS=[['ov','Overview',drawOv],['circ','Circulation',drawCirc],['pv','PV loop',drawPV],['cyc','Cardiac cycle',drawCycle],['fs','Frank-Starling',drawFS],['hr','HR and output',drawHR],['bp','Blood pressure',drawBP]];
 const ANIM={circ:true,pv:true,cyc:true};
 function buildTabs(){
   $('#tabs').innerHTML=TABS.map(t=>`<button type="button" role="tab" data-t="${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}</button>`).join('');
@@ -982,7 +996,7 @@ function redraw(){
   const W=Math.max(300,Math.floor($('.chartwrap').clientWidth-16));
   T[2](W);
   $('#spdWrap').style.visibility=ANIM[tab]?'visible':'hidden';
-  $('#detWrap').style.display=['pv','cyc','fs','hr','vr'].includes(tab)?'':'none';
+  $('#detWrap').style.display=['pv','cyc','fs','hr','bp'].includes(tab)?'':'none';
   $('#refWrap').style.display=['circ'].includes(tab)?'none':'';
   const c=$('#chart'); if(c) c.setAttribute('aria-label',T[1]+' chart');
 }
@@ -1017,10 +1031,11 @@ const OBJ=[
  {g:'PV loop',t:'Define and calculate SV, CO, EF, EDV and ESV',tab:'pv',try:'Read EDV and ESV from the readouts, then calculate SV, EF and CO (HR × SV) yourself before checking the other readouts. Repeat after changing contractility.',setP:{con:150}},
  {g:'Cardiac cycle',t:'Describe the phases of the cardiac cycle and match them with electrical and mechanical events',tab:'cyc',try:'Cardiac cycle tab. Tap each trace and read its explanation. Match P, QRS and T on the ECG to the phases, and find when each valve opens and closes. Then set heart rate to 150 bpm: which phase shortens most?',setP:{HR:150}},
  {g:'Frank-Starling',t:'Discuss the Frank-Starling law and stroke volume regulation',tab:'fs',scn:'stand',try:'Frank-Starling tab. Use Stand up, Stand + calf pump and Deep breathing and watch the point move along the curve. Then raise contractility and watch the curve itself shift.'},
+ {g:'Frank-Starling',t:'Explain the role of the venous system and the mechanisms that promote venous return',tab:'fs',scn:'stand',try:'Frank-Starling tab, Taylor standing. Gravity pools blood in the legs, so less returns to the heart. Add calf pumping, then deep breathing, and see which restores filling more. Then open the Circulation tab and expand the veins box to see why cardiac output equals venous return.'},
  {g:'HR and output',t:'Understand preload, afterload, contractility and heart rate',tab:'hr',try:'For each factor, predict SV, EDV and ESV before you move its slider. Which factors change EDV and which change ESV? Then drag heart rate up on this view: why does SV fall while CO still rises?',setP:{HR:130}},
- {g:'Venous return',t:'Explain the role of the venous system and the mechanisms that promote venous return',tab:'vr',scn:'stand',try:'Venous return tab, Taylor standing (orthostatic case). Which factor pulls blood away? Add calf pumping, deep breathing and venomotor tone and compare how much each restores. Then turn the reflex on.'},
- {g:'Compare the three people',t:'Compare cardiovascular responses to exercise in people with different fitness',tab:'circ',person:'E',scn:'ex100',try:'Run Maximal exercise for Drew, Taylor and Elliot (use the dashed line: Taylor, same activity). Compare HR, SV and CO. Why do their maximal heart rates match while their maximal outputs differ? Then compare their resting values (Lab 5 acute and chronic items).'},
- {g:'Compare the three people',t:'Explain why systolic pressure rises far less than cardiac output during exercise',tab:'circ',sel:'art',scn:'ex100',try:'Taylor, Maximal exercise. Compare how many times higher CO is than rest with how much systolic BP rises. Use BP = CO × resistance and the resistance readout in the arteries box (Lab 5 debrief question).'},
+ {g:'Blood pressure',t:'Explain why systolic pressure rises far less than cardiac output during endurance exercise',tab:'bp',scn:'end',try:'Blood pressure tab, Taylor, Endurance exercise. Compare how many times higher output is than rest with how much systolic pressure rises. Use BP = CO × resistance and the resistance bar. What does diastolic pressure do, and why?'},
+ {g:'Blood pressure',t:'Contrast the blood pressure response to a heavy lift with endurance exercise',tab:'bp',scn:'lift',try:'Blood pressure tab, Heavy lift. Which input changes, output or resistance? Compare systolic and diastolic with Endurance exercise. Why is this a short-lived peak, and what would you coach (exhale during the effort, avoid prolonged gripping)?'},
+ {g:'Compare the three people',t:'Compare cardiovascular responses to exercise in people with different fitness',tab:'circ',person:'E',scn:'ex100',try:'Run Maximal exercise for Drew, Taylor and Elliot (the dashed line is Taylor doing the same thing). Compare HR, SV and CO. Why do their maximal heart rates match while their maximal outputs differ? Then compare their resting HR, SV and blood pressure.'},
 ];
 function getDone(){return new Set((LS.get('cvA2_obj')||'').split(',').filter(Boolean).map(Number))}
 function setDone(set){LS.set('cvA2_obj',[...set].join(','))}
@@ -1044,7 +1059,7 @@ function buildObjList(){
 function setupObj(i){
   const o=OBJ[i];
   st=restFor(o.person||'T'); if(o.setP) st={...st,...o.setP};
-  if(o.scn){const s=SCN.find(x=>x[0]===o.scn); st={...st,...s[2]}; sceneNote=o.scn; last='scn:'+o.scn} else {sceneNote=o.setP?null:'rest'; last=o.setP?Object.keys(o.setP)[0]:(o.person?'person':'intro')}
+  if(o.scn){const s=SCN.find(x=>x[0]===o.scn); st={...st,...s[2]}; if(s[2].dHR!=null){st.HR=clampv(PERSON[st.person].HR0+s[2].dHR,40,200);delete st.dHR} sceneNote=o.scn; last='scn:'+o.scn} else {sceneNote=o.setP?null:'rest'; last=o.setP?Object.keys(o.setP)[0]:(o.person?'person':'intro')}
   if(o.person&&!o.scn) last='person';
   cmpMode='typ'; activeObj=i; $('#banner').dataset.open='1';
   $('#shObj').classList.remove('open');
