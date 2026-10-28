@@ -201,7 +201,7 @@ body.ov .main{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage"}
   <div class="hbtns">
     <button id="bObj" type="button">Objectives</button>
     <button id="bAbout" type="button">About</button>
-    <a id="lnkA" href="cv-hemodynamics-v2.html" target="_blank" rel="noopener">Hemodynamics model ↗</a>
+    <a id="lnkA" href="cv-hemodynamics.html" target="_blank" rel="noopener">Hemodynamics model ↗</a>
   </div>
 </header>
 <div class="main">
@@ -547,7 +547,7 @@ const WAVES={
  qrs:{title:'QRS complex',html:`<p>Ventricular depolarization. The signal travels quickly through the bundle branches and Purkinje fibers, so the complex is narrow. It lines up with phase 0 of the ventricular action potential.</p>`},
  st:{title:'ST segment',html:`<p>The flat stretch after QRS, while the ventricular cells sit in the plateau (phase 2). The ventricles are contracting and ejecting blood.</p>`},
  t:{title:'T wave',html:`<p>Ventricular repolarization (phase 3), spreading from apex to base. The ventricles relax after it.</p>`},
- qt:{title:'QT interval',html:`<p>From the start of QRS to the end of the T wave: ventricular depolarization plus repolarization, roughly the length of the ventricular action potential. It shortens as heart rate rises.</p><p><a class="epl" href="cv-hemodynamics-v2.html" target="_blank" rel="noopener">See the pressure and volume events in the Cardiac cycle tab of the hemodynamics model ↗</a></p>`}
+ qt:{title:'QT interval',html:`<p>From the start of QRS to the end of the T wave: ventricular depolarization plus repolarization, roughly the length of the ventricular action potential. It shortens as heart rate rises.</p><p><a class="epl" href="cv-hemodynamics.html" target="_blank" rel="noopener">See the pressure and volume events in the Cardiac cycle tab of the hemodynamics model ↗</a></p>`}
 };
 function renderConcept(){
   let C=CONCEPT[tab]; if(!C){$('#concept').innerHTML='';return}
@@ -885,7 +885,7 @@ function renderOverview(){
   <p>Drew, Taylor and Elliot appear on the Autonomic control tab, where you can switch between them or overlay all three heart rate curves. All three are illustrative.</p>
   <div class="people">${['D','T','E'].map(p=>`<div class="pc"><h4>${PERS[p].name}</h4><div class="sub">${PERS[p].desc}</div><p>${p==='D'?'Little vagal tone at rest, so the SA node runs closer to its intrinsic rate. Heart rate recovers more slowly after exercise.':p==='T'?'The typical reference person, and the starting point on every tab.':'High resting vagal tone holds the SA node back, so resting heart rate is low. Heart rate recovers faster after exercise.'}</p><div class="nums">rest ${fx(hr(p))} bpm</div></div>`).join('')}</div>
   <h2>Related</h2>
-  <p>The mechanical side of the same beat (pressure, volume, valve events) is in the <a class="epl" href="cv-hemodynamics-v2.html" target="_blank" rel="noopener" style="color:var(--accent)">hemodynamics model ↗</a>.</p>`;
+  <p>The mechanical side of the same beat (pressure, volume, valve events) is in the <a class="epl" href="cv-hemodynamics.html" target="_blank" rel="noopener" style="color:var(--accent)">hemodynamics model ↗</a>.</p>`;
   renderBanner();
 }
 
