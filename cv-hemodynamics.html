@@ -80,6 +80,11 @@ body:not(.ov) .ovpane,body:not(.ov) #ovPeople{display:none}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .seg button{border:0;border-radius:0;min-height:30px;padding:0 10px;font-size:12px;background:var(--panel2)}
 .seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+button[aria-pressed="true"]#pause{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.spdhelp{width:26px;min-height:26px!important;height:26px;padding:0!important;border-radius:50%!important;font-weight:600;font-size:13px}
+#spdNote{display:none;padding:0 14px 10px;font-size:12.5px;color:var(--mut)}
+#spdNote.show{display:block}
 .chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .chk input{accent-color:var(--accent)}
 #concept{padding:0;transition:opacity .2s}
@@ -173,9 +178,7 @@ svg text{font-family:var(--sans)}
 .qm circle{fill:var(--panel);stroke:var(--mut);stroke-width:1.4}
 .qm text{fill:var(--fg);font:600 11px var(--sans);paint-order:normal;stroke:none}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
-</style>
-<style>[hidden]{display:none!important}</style></head><body>
-
+[hidden]{display:none!important}</style>
 
 <div class="app">
 <header>
@@ -183,7 +186,7 @@ svg text{font-family:var(--sans)}
   <div class="hbtns">
     <button id="bObj" type="button">Objectives</button>
     <button id="bAbout" type="button">About</button>
-    <a id="lnkB" href="cv-electrophysiology.html" target="_blank" rel="noopener">Electrophysiology model ↗</a>
+    <a id="lnkB" href="cv-electrophysiology-v2.html" target="_blank" rel="noopener">Electrophysiology model ↗</a>
   </div>
 </header>
 <div class="main">
@@ -198,9 +201,11 @@ svg text{font-family:var(--sans)}
         <label class="chk" id="detWrap"><input type="checkbox" id="showDet"> <span>Show details</span></label>
         <span class="sp"></span>
         <span id="spdWrap" style="display:inline-flex;gap:6px;align-items:center">
-          <span class="seg" id="spd"><button type="button" data-v="0.25" class="on" aria-label="Quarter speed">¼×</button><button type="button" data-v="0.5" aria-label="Half speed">½×</button><button type="button" data-v="1" aria-label="Real time">1×</button></span>
+          <span class="seg" id="spd"><button type="button" data-v="0.25" aria-label="Quarter speed">¼×</button><button type="button" data-v="0.5" class="on" aria-label="Half speed">½×</button><button type="button" data-v="1" aria-label="Real time">1×</button></span>
+          <button type="button" class="spdhelp" id="spdHelp" aria-label="About the speed control" aria-expanded="false">?</button>
           <button type="button" id="pause" aria-pressed="false" style="min-height:30px;font-size:12px;padding:0 10px">Pause</button></span>
       </div>
+      <div id="spdNote"><b>Speed:</b> 1× is real time (one heartbeat at rest takes about 0.85 s). ½× and ¼× are slower. Slowing down helps because filling and ejection are brief. Pause to stop on one moment and read the values.</div>
     </div>
   </section>
   <section class="below">
@@ -342,10 +347,10 @@ function solve(p){
 (()=>{
 const $=s=>document.querySelector(s);
 const fx=(v,n=0)=>v.toFixed(n);
-const EP_URL='cv-electrophysiology.html';
+const EP_URL='cv-electrophysiology-v2.html';
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const restFor=p=>({...REST,person:p,HR:PERSON[p].HR0});
-let st=restFor('T'), cmpMode='typ', showRef=true, details=false, speed=0.25, paused=false, clock=0, sceneNote='rest', last='intro';
+let st=restFor('T'), cmpMode='typ', showRef=true, details=false, speed=0.5, paused=false, clock=0, sceneNote='rest', last='intro';
 let tab='ov', circSel=null, cycSel=null, activeObj=null, conceptOpen=LS.get('cvA2_concept')!=='0', termOpen=null;
 let cur, ref, base, typ, BM, BR;
 const PN={D:'Drew',T:'Taylor',E:'Elliot'}, PS={D:'deconditioned',T:'typical',E:'endurance-trained'};
@@ -1083,7 +1088,8 @@ details=LS.get('cvA2_det')==='1'; $('#showDet').checked=details;
 $('#showRef').onchange=e=>{showRef=e.target.checked;redraw()};
 $('#showDet').onchange=e=>{details=e.target.checked;LS.set('cvA2_det',details?'1':'0');redraw()};
 $('#chart').parentNode.addEventListener('click',chartClick); $('.chartwrap').addEventListener('keydown',chartKey);
-$('#spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.v;for(const x of $('#spd').children)x.classList.toggle('on',x===b)};
+$('#spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.v;for(const x of $('#spd').children){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b)}};
+$('#spdHelp').onclick=()=>{const n=$('#spdNote'),o=!n.classList.contains('show');n.classList.toggle('show',o);$('#spdHelp').setAttribute('aria-expanded',o)};
 $('#pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'Play':'Pause';e.target.setAttribute('aria-pressed',paused)};
 if(reduce){paused=true;$('#pause').textContent='Play';$('#pause').setAttribute('aria-pressed','true')}
 update();
