@@ -186,7 +186,7 @@ svg text{font-family:var(--sans)}
   <div class="hbtns">
     <button id="bObj" type="button">Objectives</button>
     <button id="bAbout" type="button">About</button>
-    <a id="lnkB" href="cv-electrophysiology-v2.html" target="_blank" rel="noopener">Electrophysiology model ↗</a>
+    <a id="lnkB" href="cv-electrophysiology.html" target="_blank" rel="noopener">Electrophysiology model ↗</a>
   </div>
 </header>
 <div class="main">
@@ -347,7 +347,7 @@ function solve(p){
 (()=>{
 const $=s=>document.querySelector(s);
 const fx=(v,n=0)=>v.toFixed(n);
-const EP_URL='cv-electrophysiology-v2.html';
+const EP_URL='cv-electrophysiology.html';
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const restFor=p=>({...REST,person:p,HR:PERSON[p].HR0});
 let st=restFor('T'), cmpMode='typ', showRef=true, details=false, speed=0.5, paused=false, clock=0, sceneNote='rest', last='intro';
