@@ -74,7 +74,7 @@ body:not(.ov) .ovpane,body:not(.ov) #ovPeople{display:none}
 .banner label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;min-height:28px}
 .chartwrap{padding:8px 8px 6px}
 #chart{display:block;width:100%;height:auto;margin:0 auto}
-@media (max-width:900px){#chart{max-height:36vh}.chartwrap{padding:4px 6px 2px}.chartfoot{padding:2px 8px 8px;gap:6px}.hbtns a,.hbtns button{min-height:30px;padding:0 10px;font-size:12.5px}header{margin-bottom:6px}header h1{font-size:16px}header h1 small{display:none}}
+@media (max-width:900px){body.t-vt #chart{max-height:46vh}#chart{max-height:36vh}.chartwrap{padding:4px 6px 2px}.chartfoot{padding:2px 8px 8px;gap:6px}.hbtns a,.hbtns button{min-height:30px;padding:0 10px;font-size:12.5px}header{margin-bottom:6px}header h1{font-size:16px}header h1 small{display:none}}
 .chartfoot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 12px 10px;font-size:12px;color:var(--mut)}
 .chartfoot .sp{flex:1}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
@@ -174,7 +174,7 @@ svg text{font-family:var(--sans)}
 .axl{stroke:var(--faint);stroke-width:1;fill:none}
 .cv{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .gh{fill:none;stroke:var(--faint);stroke-width:1.8;stroke-dasharray:5 4;stroke-linecap:round;stroke-linejoin:round}
-#chart g[data-b],#chart g[data-c]{cursor:pointer}
+#chart g[data-b],#chart g[data-c],#chart g[data-v]{cursor:pointer}
 .qm circle{fill:var(--panel);stroke:var(--mut);stroke-width:1.4}
 .qm text{fill:var(--fg);font:600 11px var(--sans);paint-order:normal;stroke:none}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
@@ -233,9 +233,10 @@ svg text{font-family:var(--sans)}
     <li>Cardiac output equals venous return in the steady state. The model finds the filling pressure where what the veins return equals what the heart pumps.</li>
     <li>Preload (filling pressure, set by venous return) moves the heart along the end-diastolic pressure-volume curve. Contractility changes the slope of the end-systolic curve. Afterload is the arterial pressure the ventricle must reach to eject. Heart rate sets the time available for filling.</li>
     <li>BP = cardiac output × resistance. Pulse pressure rises with stroke volume and with faster ejection.</li>
-    <li>The exercise slider moves heart rate, contractility, muscle pump, venoconstriction, breathing and resistance together toward a maximal effort. Maximal heart rate is set to 190 bpm. Stroke volume plateaus in the middle of the range in the typical person (Powers Ch. 9).</li>
+    <li>The exercise slider moves heart rate, contractility, muscle pump, venoconstriction, breathing and resistance together toward a maximal effort. Maximal heart rate is set to 190 bpm. Stroke volume plateaus in the middle of the range in the typical person (Powers Ch. 9). The resistance curve is shaped so that systolic pressure rises with effort while diastolic stays within about 5 mmHg of its resting value through moderate effort and then falls near maximal effort, the usual normal pattern.</li>
     <li>The Heavy lift scenario is a brief surge of resistance and heart rate with little change in output. It shows direction only: direct arterial recordings in lifters show far larger peaks, helped by a held breath and compression of the working muscle (MacDougall 1985, 1992), which the model does not reproduce.</li>
-    <li>The reflex switch adds a simple baroreflex: a fall in mean pressure raises heart rate, contractility, venous tone and resistance.</li>
+    <li>The reflex switch adds a simple baroreflex: a fall in mean pressure raises heart rate, contractility, venous tone and sympathetic vasoconstriction.</li>
+    <li>The Vessels &amp; BP view splits total resistance into five arteriolar beds in parallel (working muscle, gut and kidney, brain, heart, skin). Each bed's conductance follows radius to the fourth power, and total resistance is one divided by the sum of the bed conductances. Resting shares of cardiac output (muscle about 20%, gut and kidney about half, brain 14%, skin 10%, heart 5%) are typical textbook values. The sensitivities to each cause are tuned by hand so that the default exercise response matches the lecture pattern; they are illustrative, not measured. Extreme slider settings show direction only. Capillary exchange and the renin-angiotensin system are not modeled.</li>
     <li>Right-heart, lung and valve details are not modeled. Disease states are not part of this version.</li>
   </ul>
   <h4>Sources</h4>
@@ -247,6 +248,9 @@ svg text{font-family:var(--sans)}
     <li>Cohen DL, Townsend RR. Exaggerated systolic blood pressure response to exercise. <i>J Clin Hypertens</i> 2007;9(4):291-292. Normal response to dynamic exercise: systolic rises, diastolic unchanged or slightly lower; cardiac output up and peripheral resistance down. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8109871" target="_blank" rel="noopener">PMC</a></li>
     <li>MacDougall JD, Tuxen D, Sale DG, Moroz JR, Sutton JR. Arterial blood pressure response to heavy resistance exercise. <i>J Appl Physiol</i> 1985;58(3):785-790. <a href="https://pubmed.ncbi.nlm.nih.gov/3980383/" target="_blank" rel="noopener">PubMed</a></li>
     <li>MacDougall JD, McKelvie RS, Moroz DE, Sale DG, McCartney N, Buick F. Factors affecting blood pressure during heavy weight lifting and static contractions. <i>J Appl Physiol</i> 1992;73(4):1590-1597. <a href="https://paulogentil.com/pdf/Factors%20affecting%20blood%20pressure%20during%20heavy%20weight%20lifting%20and%20static%20contractions.pdf" target="_blank" rel="noopener">PDF</a></li>
+    <li>Joyner MJ, Casey DP. Regulation of increased blood flow (hyperemia) to muscles during exercise: a hierarchy of competing physiological needs. <i>Physiol Rev</i> 2015;95(2):549-601. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4551211/" target="_blank" rel="noopener">PMC</a></li>
+    <li>Davis MJ, Hill MA. Signaling mechanisms underlying the vascular myogenic response. <i>Physiol Rev</i> 1999;79(2):387-423. <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Signaling+mechanisms+underlying+the+vascular+myogenic+response" target="_blank" rel="noopener">PubMed search</a></li>
+    <li>Johnson JM, Kellogg DL Jr. Local thermal control of the human cutaneous circulation. <i>J Appl Physiol</i> 2010;109(4):1229-1238. <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Local+thermal+control+of+the+human+cutaneous+circulation" target="_blank" rel="noopener">PubMed search</a></li>
     <li>Cornelissen VA, Smart NA. Exercise training for blood pressure: a systematic review and meta-analysis. <i>J Am Heart Assoc</i> 2013;2:e004473. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3603230" target="_blank" rel="noopener">PMC</a></li>
   </ul>
   <h4>What is and is not sourced</h4>
@@ -264,19 +268,53 @@ const PERSON={
   T:{name:'Taylor',HR0:70,con:1,stiff:1,bv:0,res:1.0,conEx:1.0},
   E:{name:'Elliot',HR0:50,con:1.05,stiff:0.75,bv:2,res:0.92,conEx:1.0}
 };
-const REST={HR:70,con:100,stiff:100,res:100,bv:100,tone:50,mp:0,tp:30,post:0,ex:0,baro:0,person:'T'};
+const REST={HR:70,con:100,stiff:100,res:100,bv:100,tone:50,mp:0,tp:30,post:0,ex:0,baro:0,person:'T',sym:null,met:null,ang:100,heat:0};
+
+/* ---------- Arteriolar beds in parallel: TPR = 1 / sum of bed conductances (conductance ~ radius^4) ----------
+   Rest shares of cardiac output: muscle 22, gut and kidneys 49, brain 14, skin 10, heart 5 (percent).
+   Muscle conductance at the default (exercise-driven) causes is calibrated so total resistance equals the earlier model. */
+const BEDS=['m','v','s','b','h'], BED0={m:22,v:49,s:10,b:14,h:5};
+function bedOthers(S,a,he,x){
+  return {v:49*Math.exp(4*(-0.40*(S-1)-0.30*(a-1))),
+          s:10*Math.exp(4*(0.45*he-0.25*(S-1)-0.30*(a-1))),
+          b:14,
+          h:5*Math.exp(4*0.38*x)};
+}
+/* metabolic vasodilator drive vs exercise: power curve with a gentle start so the first few percent of effort barely change resistance */
+K.xvW=0.166; K.resW=0.141; K.rA=0.0315; K.rC=0.649; K.rD=0.315; K.ppB=0.0478;
+const yEx=x=>Math.pow(x,K.resExp)*(1-Math.exp(-Math.pow(x/K.resW,2)));
+const bump=x=>Math.exp(-Math.pow((x-K.rC)/K.rD,2))*(1-Math.exp(-Math.pow(x/0.1,2)));
+let _gm=[];
+function buildTable(){_gm=[];
+for(let i=0;i<=200;i++){const x=i/200,o=bedOthers(1+0.9*x,1,0.5*x,x);_gm.push([yEx(x),100/((1-K.resDrop*yEx(x))*(1-K.rA*bump(x)))-(o.v+o.s+o.b+o.h)])}}
+buildTable();
+function gMuscle(y){
+  y=clamp(y,0,1);let lo=0,hi=_gm.length-1;
+  while(hi-lo>1){const mid=(lo+hi)>>1;if(_gm[mid][0]<=y)lo=mid;else hi=mid}
+  const a=_gm[lo],b=_gm[hi],t=b[0]>a[0]?(y-a[0])/(b[0]-a[0]):0;return a[1]+(b[1]-a[1])*t;
+}
+function beds(p,d){
+  const x=p.ex/100, y=(p.met==null?yEx(x):p.met/100);
+  const S0=1+0.9*x, symE=(p.sym==null?S0:p.sym/100), S=symE*(1+0.35*d), a=p.ang/100, he=(p.heat||0)/100+0.5*x;
+  const o=bedOthers(S,a,he,x);
+  const dev=-0.12*(S-S0)*(1-0.8*y)-0.15*(a-1);
+  const G={m:gMuscle(y)*Math.exp(4*dev),v:o.v,s:o.s,b:o.b,h:o.h};
+  const Gt=G.m+G.v+G.s+G.b+G.h;
+  return {G,Gt,S,S0,y,a,he,factor:100/Gt};
+}
 function effective(p,d){
   const x=p.ex/100, P=PERSON[p.person||'T'];
   let HR=p.HR+(K.HRmax-p.HR)*x;
   let con=p.con/100*P.con*(1+K.conEx*P.conEx*x);
-  const xv=1-Math.pow(1-x,K.vexp);
+  const xv=(1-Math.pow(1-x,K.vexp))*(1-Math.exp(-Math.pow(x/K.xvW,2)));
   let tone=p.tone+(90-p.tone)*xv;
   let mp=Math.max(p.mp,95*xv);
   let tp=p.tp+(85-p.tp)*xv;
-  let res=p.res/100*P.res*(1-K.resDrop*Math.pow(x,K.resExp));
+  const B=beds(p,d);
+  let res=p.res/100*P.res*B.factor;
   let stiff=p.stiff/100*P.stiff, bv=p.bv+P.bv, post=p.post;
-  HR+=45*d; con*=1+0.35*d; tone+=35*d; res*=1+0.35*d;
-  return {HR:clamp(HR,30,230),con:clamp(con,0.2,3),tone:clamp(tone,0,100),mp:clamp(mp,0,100),tp:clamp(tp,0,100),res:clamp(res,0.2,3),stiff,bv,post};
+  HR+=45*d; con*=1+0.35*d; tone+=35*d;
+  return {HR:clamp(HR,30,230),con:clamp(con,0.2,3),tone:clamp(tone,0,100),mp:clamp(mp,0,100),tp:clamp(tp,0,100),res:clamp(res,0.2,3),stiff,bv,post,ppm:1+K.ppB*bump(x),bed:B,cmul:p.res/100*P.res};
 }
 function edv_from_P(P,s){return K.V0+Math.log(1+Math.max(0,P)/(s*K.P0))/K.b}
 function P_from_edv(V,s){return s*K.P0*(Math.exp(K.b*(V-K.V0))-1)}
@@ -301,7 +339,7 @@ function cardiac(e,RAP,Pstart){
     const Pes=Psys-4;
     ESV=clamp(K.V0es+Pes/Ees,15,EDV-2);
     SV=EDV-ESV; CO=e.HR*SV/1000;
-    MAP=CO*TPR+RAP; PP=SV/K.Ca*Math.pow(0.22/Math.max(0.07,Ts-0.095),K.ppExp)/Math.pow(0.22/(timing(70,1).Ts-0.095),K.ppExp);
+    MAP=CO*TPR+RAP; PP=(e.ppm||1)*SV/K.Ca*Math.pow(0.22/Math.max(0.07,Ts-0.095),K.ppExp)/Math.pow(0.22/(timing(70,1).Ts-0.095),K.ppExp);
     const nP=MAP+PP*2/3;
     Psys+=0.5*(nP-Psys);
   }
@@ -352,7 +390,7 @@ const EP_URL='cv-electrophysiology.html';
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const restFor=p=>({...REST,person:p,HR:PERSON[p].HR0});
 let st=restFor('T'), cmpMode='typ', showRef=true, details=false, speed=0.5, paused=false, clock=0, sceneNote='rest', last='intro';
-let tab='ov', circSel=null, cycSel=null, activeObj=null, conceptOpen=LS.get('cvA2_concept')!=='0', termOpen=null;
+let tab='ov', circSel=null, cycSel=null, vtSel=null, activeObj=null, conceptOpen=LS.get('cvA2_concept')!=='0', termOpen=null;
 let cur, ref, base, typ, BM, BR;
 const PN={D:'Drew',T:'Taylor',E:'Elliot'}, PS={D:'deconditioned',T:'typical',E:'endurance-trained'};
 const clampv=(x,a,b)=>Math.min(b,Math.max(a,x));
@@ -370,6 +408,10 @@ const CT=[
  {g:'Heart',k:'con',label:'Contractility',min:40,max:200,step:5,u:'%',eff:e=>e.con*100},
  {g:'Heart',k:'stiff',label:'Ventricular stiffness',min:60,max:250,step:5,u:'%'},
  {g:'Arteries',k:'res',label:'Arterial resistance (afterload)',min:40,max:200,step:5,u:'%',eff:e=>e.res*100},
+ {g:'Vessel tone (arterioles)',k:'sym',label:'Sympathetic vasoconstrictor outflow',min:50,max:180,step:5,u:'%',auto:e=>e.bed.S0*100,eff:e=>e.bed.S*100},
+ {g:'Vessel tone (arterioles)',k:'met',label:'Local metabolic demand (working muscle)',min:0,max:100,step:5,u:'%',auto:e=>e.bed.y*100,eff:e=>e.bed.y*100},
+ {g:'Vessel tone (arterioles)',k:'ang',label:'Circulating angiotensin II',min:50,max:200,step:5,u:'%'},
+ {g:'Vessel tone (arterioles)',k:'heat',label:'Body heat load (skin)',min:0,max:100,step:5,u:'%',eff:e=>e.bed.he*100},
  {g:'Veins and venous return',k:'bv',label:'Blood volume (hydration)',min:70,max:120,step:1,u:'%'},
  {g:'Veins and venous return',k:'tone',label:'Venomotor tone',min:0,max:100,step:1,u:'',eff:e=>e.tone},
  {g:'Veins and venous return',k:'mp',label:'Muscle pump',min:0,max:100,step:1,u:'%',eff:e=>e.mp},
@@ -386,7 +428,8 @@ const SCN=[
  ['lift','Heavy lift (short peak)',{res:170,dHR:30,lift:1}],
  ['standbaro','Stand up + reflex',{post:1,baro:1}],
 ];
-const SCN_TAB={circ:['rest','ex50','ex100','stand','standmp','breath'],pv:['rest','ex50','ex100','stand'],cyc:['rest','ex50','ex100'],fs:['rest','stand','standmp','breath','ex50'],hr:['rest','ex50','ex100'],bp:['rest','end','lift','stand','standbaro']};
+SCN.push(['hot','Hot environment',{heat:60,baro:1}]);
+const SCN_TAB={vt:['rest','end','lift','standbaro','hot'],circ:['rest','ex50','ex100','stand','standmp','breath'],pv:['rest','ex50','ex100','stand'],cyc:['rest','ex50','ex100'],fs:['rest','stand','standmp','breath','ex50'],hr:['rest','ex50','ex100']};
 function buildCtl(){
   let h=`<h3>Person</h3><div class="pers" id="pers">${['D','T','E'].map(p=>`<button type="button" data-p="${p}"><b>${PN[p]}</b><span>${PS[p]}</span></button>`).join('')}</div>
   <h3>Dashed line shows</h3><div class="cmp" id="cmp"><button type="button" data-m="typ">Typical person, same activity</button><button type="button" data-m="rest">This person at rest</button></div><p class="cap" id="cmpcap"></p>
@@ -394,14 +437,15 @@ function buildCtl(){
   let g='';
   for(const c of CT){
     if(c.g!==g){g=c.g;h+=`<h3>${g}</h3>`}
+    if(c.k==='sym') h+=`<p class="cap">Auto means the value follows the exercise slider. Move a slider to take control of that cause.</p>`;
     h+=`<div class="sl"><div class="top"><label for="s_${c.k}">${c.label}</label><b id="v_${c.k}"></b></div>
-    <input type="range" id="s_${c.k}" min="${c.min}" max="${c.max}" step="${c.step}" value="${st[c.k]}"><div class="eff" id="e_${c.k}"></div></div>`;
+    <input type="range" id="s_${c.k}" min="${c.min}" max="${c.max}" step="${c.step}" value="${st[c.k]==null?100:st[c.k]}"><div class="eff" id="e_${c.k}"></div></div>`;
     if(c.k==='ex') h+=`<div class="row2"><span>Autonomic reflex (baroreflex)</span><span class="seg" id="sgBaro"><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></span></div>`;
     if(c.k==='tp') h+=`<div class="row2"><span>Posture</span><span class="seg" id="sgPost"><button type="button" data-v="0">Supine</button><button type="button" data-v="1">Standing</button></span></div>`;
   }
   h+=`<div class="tools"><button type="button" id="bReset">Reset to rest</button></div>`;
   $('#ctl').innerHTML=h;
-  for(const c of CT) $('#s_'+c.k).addEventListener('input',e=>{st[c.k]=+e.target.value;sceneNote=null;last=c.k;update()});
+  for(const c of CT) $('#s_'+c.k).addEventListener('input',e=>{st[c.k]=+e.target.value;if(c.k==='ex'){st.sym=null;st.met=null}sceneNote=null;last=c.k;update()});
   $('#scn').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;applyScn(b.dataset.s)});
   $('#pers').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setPerson(b.dataset.p)});
   $('#cmp').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;cmpMode=b.dataset.m;update()});
@@ -420,10 +464,11 @@ function buildScn(){
 }
 function syncCtl(){
   for(const c of CT){
-    const i=$('#s_'+c.k); if(+i.value!==st[c.k]) i.value=st[c.k];
-    $('#v_'+c.k).textContent=st[c.k]+c.u;
+    const i=$('#s_'+c.k), isAuto=!!c.auto&&st[c.k]==null, sv=isAuto?Math.round(c.auto(cur.e)/c.step)*c.step:st[c.k];
+    if(+i.value!==sv) i.value=sv;
+    $('#v_'+c.k).textContent=sv+c.u+(isAuto?' (auto)':'');
     let t='';
-    if(c.eff){const ev=c.eff(cur.e); if(Math.abs(ev-st[c.k])>(c.k==='HR'?0.6:1.2)) t='in use: '+Math.round(ev)+(c.u===' bpm'?' bpm':c.u)}
+    if(c.eff){const ev=c.eff(cur.e); if(Math.abs(ev-sv)>(c.k==='HR'?0.6:1.2)) t='in use: '+Math.round(ev)+(c.u===' bpm'?' bpm':c.u)}
     $('#e_'+c.k).textContent=t;
   }
   for(const b of $('#sgBaro').children) b.classList.toggle('on',+b.dataset.v===st.baro);
@@ -473,7 +518,7 @@ function explain(){
   const key=last;
   if(key==='intro'){ t='Pick a person and a scenario, or move any slider. Compare the readouts with the dashed line, and open the concept panel below for the idea behind each view.'; meta='Tip: predict what SV, EDV and ESV will do before you move a slider.'}
   else if(key==='person'){ const P=st.person; t=PERSON_TXT[P](c,r); meta=PERSON_META[P] }
-  else if(key.startsWith('scn:')){ const s=SCENE[key.slice(4)]; t=s.t(c,r)+vsT(); meta=s.m }
+  else if(key.startsWith('scn:')){ const id=key.slice(4), s=(tab==='vt'&&VTSC[id])||SCENE[id]; t=s.t(c,r)+(tab==='vt'?'':vsT()); meta=s.m }
   else if(same(key)&&key!=='baro'&&key!=='post'&&key!=='ex'){ t='Back at the reference value for this control.'; }
   else switch(key){
     case 'HR': t = up('HR')
@@ -512,6 +557,22 @@ function explain(){
       ? `Gravity pools blood in the leg veins, so venous return falls: ${EDVs}, ${SVs}, ${COs}. BP falls to ${fx(c.Psys)}/${fx(c.Pdia)}. Try calf pumping, more venomotor tone, or the reflex.`
       : `Lying flat removes the pooling. Venous return, EDV and SV rise toward their resting values.`;
       meta='Powers: upright rest gives a smaller EDV and SV than supine rest because of pooling.'; break;
+    case 'sym': t = c.e.bed.S>=r.e.bed.S
+      ? `More sympathetic nerve activity releases norepinephrine onto α₁-receptors in the arteriole walls, so the smooth muscle contracts and the vessels narrow. Gut and kidney radius ${vtR('v')}, skin ${vtR('s')}, muscle ${vtR('m')}. ${vtChain()}`
+      : `Less sympathetic activity lets the arteriole smooth muscle relax, so the vessels widen. Gut and kidney radius ${vtR('v')}, skin ${vtR('s')}, muscle ${vtR('m')}. ${vtChain()}`;
+      meta='Vessels have resting (basal) sympathetic tone, so they can widen as well as narrow. Gut, kidney and skin are strongly controlled this way. The brain and heart are largely spared.'; break;
+    case 'met': t = c.e.bed.y>r.e.bed.y
+      ? `Working muscle uses O₂ and releases K⁺, H⁺, adenosine, CO₂ and lactate. These local signals relax the arteriole smooth muscle in that muscle (active hyperemia), even while the sympathetic nerves are firing. Muscle radius ${vtR('m')}, so its share of flow rises to ${fx(vtShare('m'))}%. ${vtChain()}`
+      : `With less metabolic demand the local dilating signals fade and the muscle arterioles return toward their resting tone. Muscle radius ${vtR('m')}, share of flow ${fx(vtShare('m'))}%. ${vtChain()}`;
+      meta='Local metabolic control matches flow to demand. In exercise it overrides the sympathetic constriction in the working muscle ("functional sympatholysis").'; break;
+    case 'ang': t = st.ang>=100
+      ? `Angiotensin II acts on AT₁ receptors in the arteriole wall and narrows the vessels in most beds, most in the gut, kidney and skin. Gut and kidney radius ${vtR('v')}, skin ${vtR('s')}. ${vtChain()}`
+      : `Less angiotensin II removes some constriction, so the vessels widen. Gut and kidney radius ${vtR('v')}, skin ${vtR('s')}. ${vtChain()}`;
+      meta='Angiotensin II is a circulating (humoral) vasoconstrictor. It is released when renal perfusion falls and works over minutes to hours.'; break;
+    case 'heat': t = (st.heat||0)>0
+      ? `Warm blood and skin make the skin arterioles dilate so that more blood flows near the surface and carries heat away. Skin radius ${vtR('s')}, share of flow ${fx(vtShare('s'))}%. ${vtChain()}`
+      : `Without heat load the skin arterioles return to their resting tone. Skin radius ${vtR('s')}. ${vtChain()}`;
+      meta='Skin blood flow is controlled by temperature as well as by blood pressure. In the heat the skin competes with the muscle and gut for cardiac output.'; break;
     case 'baro': t = st.baro
       ? `Reflex on: when mean pressure falls, baroreceptor firing falls and sympathetic activity rises. Heart rate, contractility, venous tone and resistance are all pushed up (reflex drive ${fx(c.drive_baro*100)}%). Mean pressure ${arrow(r.MAP,c.MAP)} mmHg.`
       : `Reflex off: the sliders act alone, with no automatic correction of pressure.`;
@@ -522,8 +583,19 @@ function explain(){
       meta='Powers: stroke volume plateaus at about 40 to 60% of VO₂max in untrained people, so cardiac output then rises mostly through heart rate.'; break;
     default: t='';
   }
+  if(tab==='vt'&&key==='intro') { t='Pick a scenario or move a cause slider. Watch the arteriole radius in each bed, then the total resistance and blood pressure.'; meta='Tip: predict which beds widen and which narrow before you run Endurance exercise.' }
+  if(tab==='vt'&&['ex','post','HR','con','stiff','res','bv','tone','mp','tp','baro'].includes(key)) t+=' '+vtChain();
   $('#explain').innerHTML=`<h2>What changed and why</h2><p>${t}</p>${meta?`<p class="meta">${meta}</p>`:''}`;
 }
+const vtRel=b=>Math.pow(cur.e.bed.G[b]/BED0[b],0.25), vtShare=b=>100*cur.e.bed.G[b]/cur.e.bed.Gt;
+const vtR=b=>{const x=vtRel(b);return Math.abs(x-1)<0.03?'unchanged':(x>1?'wider, ×':'narrower, ×')+x.toFixed(2)};
+const vtChain=()=>`Total resistance ${fx(cur.e.res*100)}% of rest (${arrow(base.e.res*100,cur.e.res*100)}), so with output ${fx(cur.CO,1)} L/min, BP ${fx(cur.Psys)}/${fx(cur.Pdia)} mmHg.`;
+const VTSC={
+ rest:{t:(c)=>`At rest the sympathetic nerves send a steady, moderate signal, so the arterioles are partly narrowed. About half of cardiac output goes to the gut and kidneys and about a fifth to muscle. Total resistance is 100% of the resting value and BP ${fx(c.Psys)}/${fx(c.Pdia)} mmHg.`,m:'Now run Endurance exercise and compare the muscle and gut bars.'},
+ end:{t:(c,r)=>`Endurance exercise: sympathetic outflow rises, which narrows the gut, kidney and skin arterioles. But the working muscle releases local dilators that win, so muscle radius is ×${vtRel('m').toFixed(2)} and it takes ${fx(vtShare('m'))}% of the cardiac output. Total resistance falls to ${fx(c.e.res*100)}% of rest, so with output ${fx(c.CO,1)} L/min BP is ${fx(c.Psys)}/${fx(c.Pdia)}.`,m:'Expected: muscle arterioles dilate, gut and kidney arterioles constrict, TPR falls, diastolic stays about the same. Try removing the metabolic demand with its slider and watch resistance and diastolic pressure.'},
+ standbaro:{t:(c,r)=>`Standing with the reflex on: falling pressure raises sympathetic outflow, which constricts the arterioles. Gut and kidney radius ${vtR('v')}, resistance ${fx(c.e.res*100)}% of rest, BP ${fx(c.Psys)}/${fx(c.Pdia)} mmHg.`,m:'This is the baroreflex acting on vessels as well as on the heart. Turn the reflex off with the switch to compare.'},
+ hot:{t:(c,r)=>`Hot environment: the skin arterioles dilate to lose heat, taking ${fx(vtShare('s'))}% of cardiac output (${fx(base.e.bed.G.s/base.e.bed.Gt*100)}% at rest). Total resistance falls to ${fx(c.e.res*100)}% of rest. The reflex answers by constricting gut and kidney arterioles (radius ${vtR('v')}). BP ${fx(c.Psys)}/${fx(c.Pdia)} mmHg.`,m:'Heat shifts blood to the skin. Turn the reflex off with the switch and see how far pressure falls without it.'}
+};
 const PERSON_TXT={
  T:(c)=>`Taylor (typical) is the reference person: HR <b class="n">${fx(c.HR)}</b>, SV <b class="n">${fx(c.SV)}</b> mL, CO <b class="n">${fx(c.CO,1)}</b> L/min at rest. Switch to Drew or Elliot and compare with the dashed line.`,
  D:(c,r)=>`Drew (deconditioned): HR <b class="n">${fx(c.HR)}</b> bpm, SV <b class="n">${fx(c.SV)}</b> mL, CO <b class="n">${fx(c.CO,1)}</b> L/min at rest, compared with Taylor's 70, 70 and 4.9. A smaller stroke volume is made up for by a faster heart rate, so resting output stays about the same.`,
@@ -548,8 +620,21 @@ const CONCEPT={
  pv:{title:'Pressure-volume loop',html:`<p>Each beat traces one loop. The <b>right edge</b> is the end of filling (EDV), the <b>left edge</b> is the end of ejection (ESV), so the <b>width is the stroke volume</b>. Height is pressure.</p><ul><li><b>Filling:</b> volume rises at low pressure.</li><li><b>Isovolumic contraction:</b> pressure rises, volume unchanged.</li><li><b>Ejection:</b> volume falls against arterial pressure.</li><li><b>Isovolumic relaxation:</b> pressure falls, volume unchanged.</li></ul><p>More preload widens the loop to the right. More afterload raises the loop and, on its own, shrinks it. More contractility lowers the left edge (lower ESV). Turn on <b>Show details</b> to see the ESPVR and EDPVR lines.</p>`},
  cyc:{title:'The cardiac cycle',html:`<p>One heartbeat, with pressure, volume and the ECG lined up in time. Valves open and close passively with pressure differences: the <b>aortic valve</b> opens when ventricular pressure rises above aortic pressure and closes when it falls below. The <b>mitral valve</b> is open only while the ventricle fills. When both valves are shut, the ventricle is in an isovolumic phase.</p><p>The electrical signal comes just before the mechanical event it triggers. Tap a trace, or its ?, for a closer look.</p>`},
  fs:{title:'Frank-Starling law',html:`<p>The more the ventricle is filled and stretched before it contracts, the more forcefully it contracts, so the more blood it ejects. A bigger EDV gives a stronger next beat and a bigger stroke volume, up to the point where the fibers are stretched past their maximum length.</p><p><b>Moving along the curve</b> means preload changed (venous return, blood volume, posture, breathing). <b>Shifting the curve</b> means something else changed, such as contractility or heart rate. The dashed curve is the comparison.</p>`},
- hr:{title:'Heart rate, stroke volume and output',html:`<p><b>Cardiac output = heart rate × stroke volume.</b> The curves show what would happen at every heart rate with everything else held the same. The dots mark where the heart is right now, so dragging the heart rate slider moves the dots along fixed curves.</p><p>As heart rate rises, filling time shrinks, so stroke volume falls. Output still rises through the normal range because the extra beats more than make up for it. It levels off near the top of the physiological range (about 160 to 200 bpm) and falls above about 200 bpm. Normal resting HR is about 60 to 100 bpm and maximal HR is about 220 minus age.</p>`},
- bp:{title:'Blood pressure',html:`<p><b>Blood pressure ≈ cardiac output × resistance.</b> The two inputs on top set the three pressures below: systolic (peak), diastolic (lowest) and mean.</p><ul><li><b>Endurance exercise:</b> output rises several-fold, but resistance falls in the working muscle. Systolic rises modestly and diastolic stays about the same.</li><li><b>Heavy lift:</b> the squeezed muscle raises resistance, and output barely changes. Systolic and diastolic both rise, and the peak is brief.</li><li><b>Standing:</b> pooling lowers filling and output. The reflex raises heart rate and resistance to protect pressure.</li></ul>`}
+ hr:{title:'Heart rate, stroke volume and output',html:`<p><b>Cardiac output = heart rate × stroke volume.</b> The curves show what would happen at every heart rate with everything else held the same. The dots mark where the heart is right now, so dragging the heart rate slider moves the dots along fixed curves.</p><p>As heart rate rises, filling time shrinks, so stroke volume falls. Output still rises through the normal range because the extra beats more than make up for it. It levels off near the top of the physiological range (about 160 to 200 bpm) and falls above about 200 bpm. Normal resting HR is about 60 to 100 bpm and maximal HR is about 220 minus age.</p>`}
+};
+CONCEPT.vt={title:'Vessels and blood pressure',html:`<p><b>Blood pressure ≈ cardiac output × total peripheral resistance (TPR).</b> Output is how much blood the heart pumps each minute. TPR is how hard the arterioles make it to push that flow through the body. If either changes, pressure changes unless the other compensates. In endurance exercise output rises several-fold while TPR falls, so systolic rises modestly and diastolic stays about the same. In a heavy lift TPR rises while output barely changes, so both pressures rise.</p><p>Arterioles set TPR. Smooth muscle in their wall sets the <b>radius</b>: contraction narrows the vessel (<b>vasoconstriction</b>) and relaxation widens it (<b>vasodilation</b>). Resistance depends on radius to the fourth power, so halving the radius raises resistance 16-fold. Three kinds of signal act on the muscle: <b>nerves</b> (sympathetic), <b>circulating hormones</b> (such as angiotensin II) and <b>local signals</b> (metabolites, temperature, stretch, the endothelium).</p><p>The beds sit <b>in parallel</b>, so their flows add and TPR is lower than any single bed. Read the view top to bottom: causes, then radius in each bed, then resistance, output and pressure. Tap a cause, a bed or the two extra items for detail.</p>`};
+const VT_HELP={
+ sym:{title:'Sympathetic vasoconstrictor nerves',html:`<p>Sympathetic nerves release norepinephrine onto <b>α₁-receptors</b> in arteriole smooth muscle, which contracts it and narrows the vessel. The nerves fire at a steady rate at rest (basal tone), so increasing firing constricts and decreasing it dilates.</p><p>Gut, kidney and skin are strongly controlled this way. In exercise, firing rises to the whole body to hold pressure and redirect output, but the working muscle escapes it because local signals win. The baroreflex acts mainly through this pathway.</p>`},
+ met:{title:'Local metabolic signals (active hyperemia)',html:`<p>Active muscle consumes O₂ and releases K⁺, H⁺, adenosine, CO₂ and lactate. These substances relax the smooth muscle of nearby arterioles, so flow rises where demand is. This is <b>active hyperemia</b>.</p><p>The effect is strong enough to override sympathetic constriction in the working muscle. Resting muscle shows basal tone, and the bar is near zero. The brain and heart use the same local matching, which is why their flow tracks metabolism.</p>`},
+ ang:{title:'Angiotensin II (circulating vasoconstrictor)',html:`<p>Angiotensin II is a hormone made when renal perfusion falls. It acts on <b>AT₁ receptors</b> in arteriole smooth muscle and constricts most beds, and it works over minutes to hours rather than seconds.</p><p>It is one of several circulating (humoral) vasoconstrictors. Others, such as epinephrine, can constrict or dilate depending on the receptor type (α constricts, β₂ dilates muscle and heart arterioles). The renin-angiotensin system itself is not modeled here.</p>`},
+ heat:{title:'Body heat and the skin',html:`<p>When core temperature rises, sympathetic constrictor tone to the skin is withdrawn and active vasodilator signals widen the skin arterioles. More warm blood reaches the surface and heat is lost to the air.</p><p>The cost is a fall in total resistance and a larger share of cardiac output going to the skin. Exercise also warms the body, so skin vessels in exercise are pulled two ways: dilated by heat and constricted by sympathetic drive.</p>`},
+ myo:{title:'Myogenic response (stretch)',html:`<p>Arteriole smooth muscle contracts when the vessel wall is stretched by higher pressure, and relaxes when pressure falls. This keeps flow in a bed fairly steady when blood pressure changes (autoregulation) and is built into every bed, with no nerve or hormone needed.</p><p>It is why the brain and kidney hold their flow steady over a wide range of pressures. It is not shown as a separate slider in this model.</p>`},
+ endo:{title:'Endothelium: nitric oxide and endothelin',html:`<p>The inner lining of the vessel responds to flow and chemical signals. Increased flow (shear stress) makes the endothelium release <b>nitric oxide (NO)</b>, which relaxes the smooth muscle and dilates the vessel. It also releases <b>endothelin-1</b>, a strong vasoconstrictor.</p><p>This is one way vessels downstream of a dilated bed widen to carry the extra flow. It is not shown as a separate slider in this model.</p>`},
+ m:{title:'Working muscle bed',html:`<p>At rest muscle takes about a fifth of cardiac output. In exercise local metabolic dilation can widen its arterioles to about twice their resting radius, so the muscle takes most of the cardiac output (about 80% at maximal effort). This one bed is the main reason total resistance falls in exercise.</p>`},
+ v:{title:'Gut and kidney beds',html:`<p>These beds take about half of resting cardiac output. They have strong sympathetic control, so in exercise or after standing their arterioles constrict and blood is diverted to where it is needed. Kidney flow is also held steady by the myogenic response at moderate changes in pressure.</p>`},
+ b:{title:'Brain bed',html:`<p>The brain is protected: flow stays nearly constant because the arterioles respond mainly to local factors (arterial CO₂ and the myogenic response) and have little sympathetic control. In this model it does not change.</p>`},
+ h:{title:'Heart (coronary) bed',html:`<p>The heart muscle works harder in exercise, and local metabolic signals (adenosine) dilate the coronary arterioles in proportion. The heart takes about 5% of cardiac output at rest and keeps roughly that share as output rises, so its absolute flow increases several-fold.</p>`},
+ s:{title:'Skin bed',html:`<p>Skin flow serves temperature control more than metabolism. Heat dilates the skin arterioles, cold and strong sympathetic drive constrict them. In exercise both act: sympathetic drive narrows them early, and heat dilates them later.</p>`}
 };
 const CIRC_HELP={
  ven:{title:'Veins',html:`<p>This box shows how full the venous system is. About two-thirds of your blood sits in the veins, so small changes here matter. The fill level follows the pressure pushing blood back toward the heart, and the number is right atrial pressure (RAP).</p><p>It rises with more blood volume, venoconstriction (venomotor tone), the muscle pump and deep breathing, and falls when gravity pools blood in the legs on standing. Try <b>Stand up</b>, then <b>Stand + calf pump</b>.</p>`},
@@ -566,6 +651,7 @@ function renderConcept(){
   let C=CONCEPT[tab]; if(!C){$('#concept').innerHTML='';return}
   if(tab==='circ'&&circSel) C=CIRC_HELP[circSel];
   if(tab==='cyc'&&cycSel) C=CYC_HELP[cycSel];
+  if(tab==='vt'&&vtSel) C=VT_HELP[vtSel];
   const el=$('#concept'); el.classList.toggle('open',conceptOpen);
   el.innerHTML=`<button type="button" class="ch" aria-expanded="${conceptOpen}"><span class="cl">Concept</span> ${C.title}<span class="tg">▾</span></button><div class="cb">${C.html}</div>`;
   el.querySelector('.ch').onclick=()=>{conceptOpen=!conceptOpen;LS.set('cvA2_concept',conceptOpen?'1':'0');el.classList.toggle('open',conceptOpen);el.querySelector('.ch').setAttribute('aria-expanded',conceptOpen)};
@@ -630,6 +716,8 @@ const TERMS=[
  {k:'EF',n:'Ejection fraction (EF)',fm:'EF = SV ÷ EDV × 100',d:'The fraction of the filled ventricle that is ejected with each beat. It is a convenient index of contractility.',nv:'<b>Normal:</b> about 55 to 70%.',hl:['lv']},
  {k:'VR',n:'Venous return',fm:'at steady state: venous return = CO',d:'The volume of blood flowing back to the heart each minute. The heart can only pump out what the veins return, so venous return sets preload and, through it, stroke volume.',nv:'<b>Resting:</b> about 5 L/min. <b>Right atrial pressure:</b> about 2 to 6 mmHg. The veins hold about 65 to 70% of the blood.',hl:['venule','vein','ra']},
  {k:'BP',n:'Blood pressure (BP)',fm:'MAP = CO × TPR',d:'The pressure in the arteries, written as systolic over diastolic. It depends on how much blood the heart pumps and on the resistance to flow.',nv:'<b>Resting:</b> about 120/80 mmHg. <b>Maximal exercise:</b> systolic about 160 to 200 mmHg with little change in diastolic.',hl:['art','arteriole']},
+ {k:'TPR',n:'Total peripheral resistance (TPR)',fm:'MAP = CO × TPR',d:'The combined resistance to flow of all the arterioles in the body, which are arranged in parallel. Narrower arterioles raise TPR, wider ones lower it, and because resistance depends on radius to the fourth power, small changes in radius matter a lot. For a given cardiac output, a higher TPR means a higher blood pressure.',nv:'<b>Resting:</b> mean pressure about 93 mmHg ÷ output about 5 L/min, so about 18 mmHg per L/min. <b>Maximal exercise:</b> in this model about a quarter of the resting value.',hl:['arteriole','art']},
+ {k:'VT',n:'Vasoconstriction and vasodilation (vessel tone)',fm:'R ∝ 1 ÷ radius⁴',d:'Smooth muscle in the arteriole wall narrows the vessel (vasoconstriction) or relaxes to widen it (vasodilation). Because resistance depends on radius to the fourth power, small changes in radius change resistance a lot. Sympathetic nerves, hormones such as angiotensin II, and local signals from the tissue set the tone. See the Vessels & BP view.',nv:'<b>Arterioles</b> make up most of the resistance in the circulation. <b>Halving</b> a radius raises its resistance 16-fold.',hl:['arteriole','art']},
  {k:'EDV',n:'End-diastolic and end-systolic volume (EDV, ESV)',fm:'SV = EDV − ESV',d:'EDV is the volume in the ventricle when it is fullest, just before contraction. ESV is the volume left after ejection.',nv:'<b>Resting EDV:</b> about 120 mL (range about 100 to 160). <b>Resting ESV:</b> about 50 mL (range about 40 to 60).',hl:['lv']},
 ];
 function ovSvg(){
@@ -825,37 +913,88 @@ function drawHR(W){
   setSvg(W,H,s);
 }
 
-/* ---------------- tab: blood pressure ---------------- */
-function drawBP(W){
-  const narrow=W<460, lw=narrow?104:150, x0=lw+16, avail=W-x0-84;
-  const rowH=34; let y=8, s='';
-  const row=(name,sub,v,rv,max,fmt,col)=>{
-    const w=clampv(v/max,0,1)*avail, wr=clampv(rv/max,0,1)*avail, yy=y;
-    s+=`<text class="lb" x="12" y="${yy+rowH/2+(sub?0:4)}" style="font-size:12.5px">${name}</text>${sub?`<text class="lb s" x="12" y="${yy+rowH/2+13}">${sub}</text>`:''}`;
-    s+=`<rect x="${x0}" y="${yy+4}" width="${avail}" height="${rowH-8}" rx="5" style="fill:var(--panel2)"/><rect x="${x0}" y="${yy+7}" width="${Math.max(w,1).toFixed(1)}" height="${rowH-14}" rx="3" style="fill:${col}"/>`;
-    if(showRef) s+=`<path d="M${(x0+wr).toFixed(1)} ${yy+2}v${rowH-4}" style="stroke:var(--fg);stroke-width:2;stroke-dasharray:3 2"/>`;
-    s+=`<text class="lb" x="${W-10}" y="${yy+rowH/2+4}" text-anchor="end" style="font:500 12px var(--mono)">${fmt(v)}</text>`;
-    y+=rowH+4;
-  };
-  s+=`<text class="lb" x="12" y="${y+14}" style="font-size:13px;fill:var(--co)">Blood pressure = cardiac output × resistance</text>`; y+=26;
-  s+=`<text class="cl" x="12" y="${y+8}" style="fill:var(--mut)">INPUTS</text>`; y+=14;
-  row('Cardiac output','',cur.CO,ref.CO,Math.max(30,niceMax(cur.CO*1.1,5)),v=>fx(v,1)+' L/min','var(--co)');
-  row('Resistance','vessel narrowing',cur.e.res*100,ref.e.res*100,Math.max(200,niceMax(cur.e.res*110,20)),v=>fx(v)+'% rest','var(--svc)');
-  y+=6; s+=`<text class="cl" x="12" y="${y+8}" style="fill:var(--mut)">RESULT (mmHg)</text>`; y+=14;
-  const pm=Math.max(220,niceMax(cur.Psys*1.08,20));
-  row('Systolic','peak pressure',cur.Psys,ref.Psys,pm,v=>fx(v),'var(--pres)');
-  row('Mean','average pressure',cur.MAP,ref.MAP,pm,v=>fx(v),'var(--ao)');
-  row('Diastolic','lowest pressure',cur.Pdia,ref.Pdia,pm,v=>fx(v),'var(--ven)');
-  y+=4;
-  const r1=cur.CO/ref.CO, r2=cur.e.res/ref.e.res;
-  const cmp=(n,x)=>`${n} ${Math.abs(x-1)<0.02?'unchanged':(x>1?'×'+fx(x,1):'×'+fx(x,2))}`;
-  s+=`<text class="lb s" x="12" y="${y+10}" style="fill:var(--fg)">${showRef?'Compared with the dashed marks: ':'Compared with rest: '}${cmp('output',r1)} · ${cmp('resistance',r2)}</text>`; y+=18;
-  if(st.lift) s+=`<text class="lb" x="12" y="${y+10}" style="fill:var(--svc)">Short-lived peak during the lift, not a steady state. Direction only.</text>`, y+=18;
-  if(showRef) s+=`<text class="lb s" x="12" y="${y+10}">Dashed tick = comparison value</text>`, y+=18;
+/* ---------------- tab: vessel tone ---------------- */
+const VT_BEDS=[['m','Muscle'],['v','Gut, kidney'],['b','Brain'],['h','Heart'],['s','Skin']];
+function drawVT(W){
+  const B=cur.e.bed, B0=base.e.bed, BR=ref.e.bed, g=6, narrow=W<460;
+  let s='', y=4;
+  const num=(n,t)=>`<text class="cl" x="12" y="${y+9}">${n}  ${t}</text>`;
+  /* 1 causes */
+  s+=num('1',narrow?'Causes (tap a card)':'Causes (tap a card for its explanation)'); y+=14;
+  const CAU=[
+   {id:'sym',a:'Sympathetic',b:'nerves',max:200,v:B.S*100,r:BR.S*100,b0:B0.S*100,up:'constricts',unit:'%'},
+   {id:'met',a:'Muscle',b:'metabolites',max:100,v:B.y*100,r:BR.y*100,b0:B0.y*100,up:'dilates',unit:'%'},
+   {id:'ang',a:'Angiotensin II',b:'(hormone)',max:200,v:B.a*100,r:BR.a*100,b0:B0.a*100,up:'constricts',unit:'%'},
+   {id:'heat',a:'Body heat',b:'(skin)',max:150,v:B.he*100,r:BR.he*100,b0:B0.he*100,up:'dilates',unit:'%'}];
+  const cw=(W-24-3*g)/4, ch=72;
+  CAU.forEach((c,i)=>{
+    const x=12+i*(cw+g), bw=cw-16, w=clampv(c.v/c.max,0,1)*bw, sel=vtSel===c.id;
+    const d=c.v-c.b0, word=Math.abs(d)<4?'rest level':(c.up==='constricts'?(d>0?'constricts ↑':'constricts ↓'):(d>0?'dilates ↑':'dilates ↓'));
+    s+=`<g data-v="${c.id}" tabindex="0" role="button" aria-label="${c.a} ${c.b}: tap for explanation"><rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="9" style="fill:var(--panel2);stroke:${sel?'var(--accent)':'var(--line)'};stroke-width:${sel?2.2:1}"/>
+    <text class="lb" x="${x+8}" y="${y+14}" style="font-size:${narrow?10.5:11.5}px">${c.a}</text><text class="lb s" x="${x+8}" y="${y+26}">${c.b}</text>
+    <rect x="${x+8}" y="${y+33}" width="${bw}" height="7" rx="3" style="fill:var(--bg)"/><rect x="${x+8}" y="${y+33}" width="${Math.max(w,1).toFixed(1)}" height="7" rx="3" style="fill:${c.up==='constricts'?'var(--svc)':'var(--co)'}"/>
+    ${showRef?`<path d="M${(x+8+clampv(c.r/c.max,0,1)*bw).toFixed(1)} ${y+30}v13" style="stroke:var(--fg);stroke-width:2;stroke-dasharray:3 2"/>`:''}
+    <text class="lb" x="${x+8}" y="${y+56}" style="font:500 12px var(--mono)">${fx(c.v)}%</text><text class="lb s" x="${x+8}" y="${y+67}" style="font-size:10px">${word}</text>
+    ${qm(x+cw-14,y+52)}</g>`;
+  });
+  y+=ch+6;
+  const pw=(W-24-g)/2;
+  [['myo',narrow?'Also: stretch':'Also acting: stretch (myogenic)'],['endo',narrow?'Also: endothelium':'Also acting: endothelium (NO, endothelin)']].forEach((p,i)=>{
+    const x=12+i*(pw+g), sel=vtSel===p[0];
+    s+=`<g data-v="${p[0]}" tabindex="0" role="button" aria-label="${p[1]}: tap for explanation"><rect x="${x}" y="${y}" width="${pw}" height="22" rx="11" style="fill:var(--panel2);stroke:${sel?'var(--accent)':'var(--line)'};stroke-width:${sel?2.2:1}"/><text class="lb s" x="${x+10}" y="${y+15}" style="fill:var(--fg)">${p[1]}</text>${qm(x+pw-13,y+11)}</g>`;
+  });
+  y+=30;
+  /* 2 beds */
+  s+=num('2',narrow?'Radius in each bed':'Arteriole radius in each bed'); 
+  s+=`<text class="lb s" x="${W-12}" y="${y+9}" text-anchor="end" style="font-size:10px">${narrow?'dashed = rest':'dashed ring = radius at rest'}</text>`; y+=12;
+  const colW=(W-24)/5, rr=clampv(colW/6,9,15), cap=rr*2.4, cy=y+cap+2;
+  VT_BEDS.forEach((bd,i)=>{
+    const id=bd[0], cx=12+colW*(i+0.5), G=B.G[id], rel=Math.pow(G/BED0[id],0.25), rl=Math.min(rr*rel,cap), share=100*G/B.Gt, sel=vtSel===id;
+    const st_=rel<0.93?'narrower':rel>1.07?'wider':'rest';
+    const colr=rel<0.93?'var(--svc)':rel>1.07?'var(--co)':'var(--mut)';
+    s+=`<g data-v="${id}" tabindex="0" role="button" aria-label="${bd[1]} bed: tap for explanation">
+    <rect x="${(cx-colW/2+2).toFixed(1)}" y="${y}" width="${(colW-4).toFixed(1)}" height="${(cap*2+66).toFixed(1)}" rx="8" style="fill:${sel?'color-mix(in srgb,var(--accent) 12%,var(--panel))':'var(--panel)'};stroke:${sel?'var(--accent)':'var(--line)'};stroke-width:${sel?2.2:1}"/>
+    <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(rl+2.5).toFixed(1)}" style="fill:none;stroke:var(--art);stroke-width:4;opacity:.75"/>
+    <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${rl.toFixed(1)}" style="fill:${colr};opacity:.55"/>
+    <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${rr}" style="fill:none;stroke:var(--fg);stroke-width:1.4;stroke-dasharray:3 3"/>
+    <text class="lb" x="${cx.toFixed(1)}" y="${(cy+cap+14).toFixed(1)}" text-anchor="middle" style="font-size:${narrow?10:11.5}px">${bd[1]}</text>
+    <text class="lb s" x="${cx.toFixed(1)}" y="${(cy+cap+26).toFixed(1)}" text-anchor="middle" style="font-size:10px">r ×${rel.toFixed(2)} ${st_==='rest'?'':(st_==='wider'?'▲':'▼')}</text>
+    <rect x="${(cx-colW/2+8).toFixed(1)}" y="${(cy+cap+31).toFixed(1)}" width="${(colW-16).toFixed(1)}" height="5" rx="2" style="fill:var(--bg)"/><rect x="${(cx-colW/2+8).toFixed(1)}" y="${(cy+cap+31).toFixed(1)}" width="${Math.max(1,(colW-16)*share/100).toFixed(1)}" height="5" rx="2" style="fill:var(--vol)"/>
+    <text class="lb" x="${cx.toFixed(1)}" y="${(cy+cap+49).toFixed(1)}" text-anchor="middle" style="font:500 10.5px var(--mono)">${fx(share)}% flow</text>
+    ${details?`<text class="lb s" x="${cx.toFixed(1)}" y="${(cy+cap+60).toFixed(1)}" text-anchor="middle" style="font-size:9.5px">${fx(cur.CO*share/100,1)} L/min</text>`:''}</g>`;
+  });
+  y+=cap*2+72;
+  /* 3 result */
+  s+=num('3',narrow?'Result':'Result: resistance, output and pressure');
+  s+=`<text class="lb s" x="${W-12}" y="${y+9}" text-anchor="end" style="font-size:10px">BP ≈ CO × TPR</text>`; y+=12;
+  const rc=(W-24-2*g)/3, rh=58;
+  const cell=(i,ti,val,sub,v,r,mx,col)=>{
+    const x=12+i*(rc+g), bw=rc-16;
+    return `<g><rect x="${x}" y="${y}" width="${rc}" height="${rh}" rx="9" style="fill:var(--panel2);stroke:var(--line)"/><text class="lb s" x="${x+8}" y="${y+13}">${ti}</text><text class="lb" x="${x+8}" y="${y+31}" style="font:500 ${narrow?14:16}px var(--mono)">${val}</text>
+    <rect x="${x+8}" y="${y+37}" width="${bw}" height="6" rx="3" style="fill:var(--bg)"/><rect x="${x+8}" y="${y+37}" width="${Math.max(1,clampv(v/mx,0,1)*bw).toFixed(1)}" height="6" rx="3" style="fill:${col}"/>
+    ${showRef?`<path d="M${(x+8+clampv(r/mx,0,1)*bw).toFixed(1)} ${y+34}v12" style="stroke:var(--fg);stroke-width:2;stroke-dasharray:3 2"/>`:''}
+    <text class="lb s" x="${x+8}" y="${y+54}" style="font-size:10px">${sub}</text></g>`};
+  s+=cell(0,'Resistance (TPR)',fx(cur.e.res*100)+'%','of resting value',cur.e.res*100,ref.e.res*100,Math.max(200,niceMax(cur.e.res*110,20)),'var(--svc)');
+  s+=cell(1,'Cardiac output',fx(cur.CO,1),'L/min',cur.CO,ref.CO,Math.max(30,niceMax(cur.CO*1.1,5)),'var(--co)');
+  s+=cell(2,'Blood pressure',fx(cur.Psys)+'/'+fx(cur.Pdia),'mean '+fx(cur.MAP)+' mmHg',cur.MAP,ref.MAP,Math.max(150,niceMax(cur.MAP*1.1,10)),'var(--pres)');
+  y+=rh+8;
   if(details){
-    s+=`<text class="lb s" x="12" y="${y+10}">Pulse pressure ${fx(cur.Psys-cur.Pdia)} mmHg (systolic − diastolic) · stroke volume ${fx(cur.SV)} mL · mean ≈ CO × resistance + venous pressure ${fx(cur.RAP,1)}</text>`; y+=18;
+    const pm=Math.max(220,niceMax(cur.Psys*1.08,20)), lw=narrow?66:84, x0=12+lw, av=W-x0-44;
+    [['Systolic',cur.Psys,ref.Psys,'var(--pres)'],['Mean',cur.MAP,ref.MAP,'var(--ao)'],['Diastolic',cur.Pdia,ref.Pdia,'var(--ven)']].forEach(r=>{
+      s+=`<text class="lb s" x="12" y="${y+13}" style="fill:var(--fg)">${r[0]}</text><rect x="${x0}" y="${y+3}" width="${av}" height="14" rx="4" style="fill:var(--panel2)"/><rect x="${x0}" y="${y+5}" width="${Math.max(1,clampv(r[1]/pm,0,1)*av).toFixed(1)}" height="10" rx="3" style="fill:${r[3]}"/>`;
+      if(showRef) s+=`<path d="M${(x0+clampv(r[2]/pm,0,1)*av).toFixed(1)} ${y+1}v18" style="stroke:var(--fg);stroke-width:2;stroke-dasharray:3 2"/>`;
+      s+=`<text class="lb" x="${W-10}" y="${y+14}" text-anchor="end" style="font:500 11.5px var(--mono)">${fx(r[1])}</text>`; y+=22;
+    });
+    y+=2;
   }
-  setSvg(W,y+6,s);
+  let big=VT_BEDS.map(b=>[b[1],Math.pow(B.G[b[0]]/BED0[b[0]],0.25)]).sort((a,b)=>Math.abs(Math.log(b[1]))-Math.abs(Math.log(a[1])))[0];
+  if(Math.abs(Math.log(big[1]))>0.04) s+=`<text class="lb s" x="12" y="${y+8}" style="fill:var(--fg)">${big[0]}: radius ×${big[1].toFixed(2)} gives resistance ×${(1/Math.pow(big[1],4)).toFixed(2)} (R ∝ 1/r⁴)</text>`, y+=16;
+  else s+=`<text class="lb s" x="12" y="${y+8}">Halving a radius raises its resistance 16-fold (R ∝ 1/r⁴).</text>`, y+=16;
+  if(st.lift) s+=`<text class="lb s" x="12" y="${y+8}" style="fill:var(--svc)">Short-lived peak during the lift, not a steady state. Direction only.</text>`, y+=16;
+  else if(Math.abs(cur.e.cmul-PERSON[st.person].res)>0.02) s+=`<text class="lb s" x="12" y="${y+8}" style="fill:var(--svc)">The arterial resistance slider also scales every bed (×${(cur.e.cmul/PERSON[st.person].res).toFixed(2)}).</text>`, y+=16;
+  if(details) s+=`<text class="lb s" x="12" y="${y+8}">Parallel beds: TPR = 1 ÷ sum of conductances (∝ r⁴).</text>`, y+=16;
+  if(showRef) s+=`<text class="lb s" x="12" y="${y+8}">Dashed tick = comparison value</text>`, y+=16;
+  setSvg(W,y+4,s);
 }
 
 /* ---------------- tab: circulation (four boxes) ---------------- */
@@ -983,14 +1122,14 @@ function frCirc(t,dt){
 const clamp=clampv;
 
 /* ---------------- tabs, render loop ---------------- */
-const TABS=[['ov','Overview',drawOv],['circ','Circulation',drawCirc],['pv','PV loop',drawPV],['cyc','Cardiac cycle',drawCycle],['fs','Frank-Starling',drawFS],['hr','HR and output',drawHR],['bp','Blood pressure',drawBP]];
+const TABS=[['ov','Overview',drawOv],['circ','Circulation',drawCirc],['pv','PV loop',drawPV],['cyc','Cardiac cycle',drawCycle],['fs','Frank-Starling',drawFS],['hr','HR & output',drawHR],['vt','Vessels & BP',drawVT]];
 const ANIM={circ:true,pv:true,cyc:true};
 function buildTabs(){
   $('#tabs').innerHTML=TABS.map(t=>`<button type="button" role="tab" data-t="${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}</button>`).join('');
   $('#tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;setTab(b.dataset.t)};
 }
 function setTab(t){
-  const was=tab; tab=t; circSel=null; cycSel=null;
+  const was=tab; tab=t; circSel=null; cycSel=null; vtSel=null;
   for(const b of $('#tabs').children)b.classList.toggle('on',b.dataset.t===t);
   document.body.classList.toggle('ov',t==='ov');
   if(was==='ov'||t==='ov'){ const host=$('.chartwrap'); host.innerHTML='<svg id="chart" role="img" aria-label="Interactive chart"></svg>'; }
@@ -1001,8 +1140,9 @@ function redraw(){
   const T=TABS.find(t=>t[0]===tab);
   const W=Math.max(300,Math.floor($('.chartwrap').clientWidth-16));
   T[2](W);
+  document.body.classList.toggle('t-vt',tab==='vt');
   $('#spdWrap').style.visibility=ANIM[tab]?'visible':'hidden';
-  $('#detWrap').style.display=['pv','cyc','fs','hr','bp'].includes(tab)?'':'none';
+  $('#detWrap').style.display=['pv','cyc','fs','hr','vt'].includes(tab)?'':'none';
   $('#refWrap').style.display=['circ'].includes(tab)?'none':'';
   const c=$('#chart'); if(c) c.setAttribute('aria-label',T[1]+' chart');
 }
@@ -1024,10 +1164,12 @@ function chartClick(e){
   if(back){circSel=null;renderConcept();redraw();return}
   const b=e.target.closest('[data-b]');
   if(b&&tab==='circ'){circSel=circSel===b.dataset.b?null:b.dataset.b; if(circSel)openConcept(); renderConcept(); redraw(); return}
+  const v=e.target.closest('[data-v]');
+  if(v&&tab==='vt'){vtSel=vtSel===v.dataset.v?null:v.dataset.v; if(vtSel)openConcept(); renderConcept(); redraw(); return}
   const c=e.target.closest('[data-c]');
   if(c&&tab==='cyc'){cycSel=cycSel===c.dataset.c?null:c.dataset.c; if(cycSel)openConcept(); renderConcept(); redraw(); return}
 }
-function chartKey(e){ if(e.key==='Enter'||e.key===' '){ if(e.target.closest&&e.target.closest('[data-b],[data-c],[data-back]')){e.preventDefault();chartClick(e)} } }
+function chartKey(e){ if(e.key==='Enter'||e.key===' '){ if(e.target.closest&&e.target.closest('[data-b],[data-c],[data-v],[data-back]')){e.preventDefault();chartClick(e)} } }
 
 /* ---------------- objectives ---------------- */
 const OBJ=[
@@ -1038,9 +1180,10 @@ const OBJ=[
  {g:'Cardiac cycle',t:'Describe the phases of the cardiac cycle and match them with electrical and mechanical events',tab:'cyc',try:'Cardiac cycle tab. Tap each trace and read its explanation. Match P, QRS and T on the ECG to the phases, and find when each valve opens and closes. Then set heart rate to 150 bpm: which phase shortens most?',setP:{HR:150}},
  {g:'Frank-Starling',t:'Discuss the Frank-Starling law and stroke volume regulation',tab:'fs',scn:'stand',try:'Frank-Starling tab. Use Stand up, Stand + calf pump and Deep breathing and watch the point move along the curve. Then raise contractility and watch the curve itself shift.'},
  {g:'Frank-Starling',t:'Explain the role of the venous system and the mechanisms that promote venous return',tab:'fs',scn:'stand',try:'Frank-Starling tab, Taylor standing. Gravity pools blood in the legs, so less returns to the heart. Add calf pumping, then deep breathing, and see which restores filling more. Then open the Circulation tab and expand the veins box to see why cardiac output equals venous return.'},
- {g:'HR and output',t:'Understand preload, afterload, contractility and heart rate',tab:'hr',try:'For each factor, predict SV, EDV and ESV before you move its slider. Which factors change EDV and which change ESV? Then drag heart rate up on this view: why does SV fall while CO still rises?',setP:{HR:130}},
- {g:'Blood pressure',t:'Explain why systolic pressure rises far less than cardiac output during endurance exercise',tab:'bp',scn:'end',try:'Blood pressure tab, Taylor, Endurance exercise. Compare how many times higher output is than rest with how much systolic pressure rises. Use BP = CO × resistance and the resistance bar. What does diastolic pressure do, and why?'},
- {g:'Blood pressure',t:'Contrast the blood pressure response to a heavy lift with endurance exercise',tab:'bp',scn:'lift',try:'Blood pressure tab, Heavy lift. Which input changes, output or resistance? Compare systolic and diastolic with Endurance exercise. Why is this a short-lived peak, and what would you coach (exhale during the effort, avoid prolonged gripping)?'},
+ {g:'HR & output',t:'Understand preload, afterload, contractility and heart rate',tab:'hr',try:'For each factor, predict SV, EDV and ESV before you move its slider. Which factors change EDV and which change ESV? Then drag heart rate up on this view: why does SV fall while CO still rises?',setP:{HR:130}},
+ {g:'Vessels & BP',t:'Explain why systolic pressure rises far less than cardiac output during endurance exercise',tab:'vt',scn:'end',try:'Vessels & BP tab, Taylor, Endurance exercise. Compare how many times higher output is than rest with how much systolic pressure rises. Use BP = CO × TPR and the resistance card. What does diastolic pressure do, and why?'},
+ {g:'Vessels & BP',t:'Contrast the blood pressure response to a heavy lift with endurance exercise',tab:'vt',scn:'lift',try:'Vessels & BP tab, Heavy lift. Which changes, output or resistance? Compare systolic and diastolic with Endurance exercise. Why is this a short-lived peak, and what would you coach (exhale during the effort, avoid prolonged gripping)?'},
+ {g:'Vessels & BP',t:'Explain what causes vasoconstriction and vasodilation, and how arteriolar tone changes resistance (TPR) and blood pressure',tab:'vt',scn:'end',try:'Vessels & BP tab, Taylor, Endurance exercise. Which beds dilate and which constrict, and what signal causes each? Using R ∝ 1/r⁴ and the beds in parallel, explain why total resistance falls. Then use the cause sliders one at a time (sympathetic nerves, muscle metabolites, angiotensin II, body heat) and predict what each does to resistance, diastolic pressure and the share of output going to muscle.'},
  {g:'Compare the three people',t:'Compare cardiovascular responses to exercise in people with different fitness',tab:'circ',person:'E',scn:'ex100',try:'Run Maximal exercise for Drew, Taylor and Elliot (the dashed line is Taylor doing the same thing). Compare HR, SV and CO. Why do their maximal heart rates match while their maximal outputs differ? Then compare their resting HR, SV and blood pressure.'},
 ];
 function getDone(){return new Set((LS.get('cvA2_obj')||'').split(',').filter(Boolean).map(Number))}
@@ -1070,7 +1213,7 @@ function setupObj(i){
   cmpMode='typ'; activeObj=i; $('#banner').dataset.open='1';
   $('#shObj').classList.remove('open');
   tab=o.tab; buildTabs(); document.body.classList.toggle('ov',tab==='ov'); $('.chartwrap').innerHTML='<svg id="chart" role="img" aria-label="Interactive chart"></svg>';
-  circSel=o.sel&&o.tab==='circ'?o.sel:null; cycSel=null; buildScn(); update();
+  circSel=o.sel&&o.tab==='circ'?o.sel:null; cycSel=null; vtSel=null; buildScn(); update();
   document.querySelector('.stage').scrollIntoView({block:'start'});
 }
 function openSheet(id){$(id).classList.add('open');$(id).querySelector('button').focus()}
@@ -1082,6 +1225,8 @@ function buildSheets(){
   for(const sh of document.querySelectorAll('.sheet')){sh.addEventListener('click',e=>{if(e.target===sh||e.target.hasAttribute('data-close'))sh.classList.remove('open')})}
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.sheet.open').forEach(s=>s.classList.remove('open'))});
 }
+/* progress saved before the objective order changed (Oct 29): swap items 10 and 11 once */
+(function(){ if(LS.get('cvA2_objv')!=='2'){ const d=getDone(), a=d.has(10), b=d.has(11); d.delete(10); d.delete(11); if(a)d.add(11); if(b)d.add(10); setDone(d); LS.set('cvA2_objv','2') } })();
 /* ---------------- init ---------------- */
 document.body.classList.add('ov');
 buildCtl(); buildChips(); buildSheets(); buildOverview(); buildScn(); buildTabs();
@@ -1096,8 +1241,9 @@ if(reduce){paused=true;$('#pause').textContent='Play';$('#pause').setAttribute('
 update();
 let rz; new ResizeObserver(()=>{clearTimeout(rz);rz=setTimeout(()=>{if(tab!=='ov')redraw()},60)}).observe($('.chartwrap'));
 requestAnimationFrame(loop);
-window.__cv={st:()=>st,cur:()=>cur,ref:()=>ref,setTab,applyScn,setP:o=>{st={...st,...o};sceneNote=null;last=Object.keys(o)[0];update()},setPerson,sel:b=>{circSel=b;renderConcept();redraw()},cyc:c=>{cycSel=c;renderConcept();redraw()},obj:setupObj,term:k=>{termOpen=k;syncTerms()}};
+window.__cv={st:()=>st,cur:()=>cur,ref:()=>ref,setTab,applyScn,setP:o=>{st={...st,...o};sceneNote=null;last=Object.keys(o)[0];update()},setPerson,sel:b=>{circSel=b;renderConcept();redraw()},cyc:c=>{cycSel=c;renderConcept();redraw()},vt:c=>{vtSel=c;renderConcept();redraw()},obj:setupObj,term:k=>{termOpen=k;syncTerms()}};
 })();
 </script>
+
 
 </body></html>

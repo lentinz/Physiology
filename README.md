@@ -24,7 +24,7 @@ All three models use the same three people, so a student can follow one person a
 
 ## Hemodynamics model
 
-Tabs: **Overview**, **Circulation**, **PV loop**, **Cardiac cycle**, **Frank-Starling**, **HR and output**, **Blood pressure**.
+Tabs: **Overview**, **Circulation**, **PV loop**, **Cardiac cycle**, **Frank-Starling**, **HR & output**, **Vessels & BP**.
 
 - Controls: person, exercise intensity, heart rate, filling, contractility, stiffness, resistance, blood volume, venous tone, muscle pump, breathing, posture and an optional baroreflex.
 - Resting reference (Taylor): HR 70 bpm, SV about 70 mL, CO about 4.9 L/min, BP 120/80 mmHg. Maximal CO is about 21.5 L/min.
