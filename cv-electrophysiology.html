@@ -498,6 +498,13 @@ const SCENE={
  vagal:{t:(d,r)=>`Strong vagal tone: heart rate ${ar(r.HR,d.HR)} bpm, PR ${ar(r.PR*1000,d.PR*1000)} ms. Acetylcholine opens K⁺ channels and slows the If-driven depolarization.`,m:'Vagal axons end mainly in the SA node, AV node and atria, so there is little effect on ventricular contractility.'},
  denerv:{t:(d)=>`No nerve input: the SA node runs at its intrinsic rate of about ${fx(d.HR)} bpm. Resting rate is lower than this because vagal tone normally holds it back.`,m:'Automaticity is the ability to initiate a beat. The SA node has the fastest spontaneous rate, so it is the pacemaker. A transplanted (denervated) heart behaves this way.'}
 };
+function cmpText(){
+  if(!showAll||tab!=='aut') return '';
+  const ps=['D','T','E'], x=st.ex>0?st.ex/100:0.5, R={};
+  for(const p of ps){const pts=hrCourse({...st,person:p,ex:0,bal:PERS[p].b,sym:symOf(PERS[p].b),vag:vagOf(PERS[p].b)},x);R[p]={rest:pts[0][1],peak:Math.max(...pts.map(q=>q[1])),end:pts[pts.length-1][1]}}
+  const f=fx, L=k=>ps.map(p=>`${PERS[p].name} ${f(R[p][k])}`).join(', ');
+  return `<p><b>All three people (bout at ${f(x*100)}% intensity):</b> resting heart rate ${L('rest')} bpm; peak ${L('peak')} bpm; at the end of recovery ${L('end')} bpm. The fitter person starts with more vagal tone, so the resting rate is lower; when exercise stops, that vagal tone returns faster and heart rate recovers sooner.</p>`;
+}
 function explain(){
   const d=D,r=DR,k=last; let t='',m='';
   if(k==='intro'){t='Pick a scenario or move the exercise slider. Start on the <b>Conduction</b> tab to follow one beat, then open <b>Action potentials</b>, <b>ECG</b> and <b>Autonomic control</b>.';m='Tip: predict how heart rate and the ECG intervals will change before you move a slider.'}
@@ -515,7 +522,7 @@ function explain(){
   else if(k==='ex'){
     t=st.ex>0?`As intensity rises, vagal tone is withdrawn first (${fx(d.v*100)}% in use), then sympathetic activity climbs (${fx(d.s*100)}%). Heart rate ${ar(r.HR,d.HR)} bpm, PR ${ar(r.PR*1000,d.PR*1000)} ms, QT ${ar(r.QT*1000,d.QT*1000)} ms, contraction force × ${fx(d.force,2)}.`:`Exercise drive is off.`;
     m='Textbook sequence (Powers): the early rise to about 100 bpm is from vagal withdrawal and higher work rates add sympathetic drive. See About for a newer view.'}
-  $('#explain').innerHTML=`<h2>What changed and why</h2><p>${t}</p>${m?`<p class="meta">${m}</p>`:''}`;
+  $('#explain').innerHTML=`<h2>What changed and why</h2><p>${t}</p>${cmpText()}${m?`<p class="meta">${m}</p>`:''}`;
 }
 
 /* ================= concept panel ================= */
@@ -910,7 +917,7 @@ function buildTabs(){
   $('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)setTab(b.dataset.t)};
 }
 function setTab(t){
-  tab=t; details=false; showAll=false; showRef=true; buildOpts(); condSel=null; apSel=null; ecgSel=null; evOpen=null;
+  tab=t; details=false; showAll=false; showRef=true; buildOpts(); explain(); condSel=null; apSel=null; ecgSel=null; evOpen=null;
   for(const b of $('#tabs').children){b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}
   LS.set('cvB2_tab',t); buildScn(); syncCtl(); redraw(); renderBanner();
   if(t!=='ov'&&$('.stage').getBoundingClientRect().top<-40) $('.stage').scrollIntoView({block:'start'});
@@ -1004,7 +1011,7 @@ $('#ovMain').addEventListener('click',e=>{
   const t=e.target.closest('.term>button'); if(t){const i=+t.dataset.t; termOpen=termOpen===i?null:i; renderOverview()}
 });
 $('#showRef').onchange=e=>{showRef=e.target.checked;redraw()};
-$('#showAll').onchange=e=>{showAll=e.target.checked;redraw()};
+$('#showAll').onchange=e=>{showAll=e.target.checked;explain();redraw()};
 $('#showDet').onchange=e=>setDetails(e.target.checked);
 function setPaused(v){paused=v;const b=$('#pause');b.textContent=paused?'Play':'Pause';b.setAttribute('aria-pressed',paused)}
 $('#spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.v;for(const x of $('#spd').children){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b)}};

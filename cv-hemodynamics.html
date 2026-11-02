@@ -531,6 +531,18 @@ function syncChips(){
 /* ---------------- explanation (what changed and why) ---------------- */
 const arrow=(a,b,dec=0)=>`<b class="n">${fx(a,dec)} → ${fx(b,dec)}</b>`;
 function vsT(){ if(st.person==='T') return ''; const c=cur,t=typ; return ` Compared with Taylor doing the same thing: SV <b class="n">${fx(t.SV)}</b> mL and CO <b class="n">${fx(t.CO,1)}</b> L/min (${PN[st.person]}: <b class="n">${fx(c.SV)}</b> and <b class="n">${fx(c.CO,1)}</b>).`}
+function cmpText(){
+  if(!SA()) return '';
+  const ps=['D','T','E'], sp={}; for(const p of ps) sp[p]=spFor(p);
+  const f=fx, nm=p=>PN[p], L=fn=>ps.map(p=>`${nm(p)} ${fn(sp[p])}`).join(', ');
+  const hrs=ps.map(p=>sp[p].HR), flat=Math.max(...hrs)-Math.min(...hrs)<=3&&st.ex>0;
+  let h=`<b>All three people right now:</b> `;
+  if(tab==='hr') h+=`heart rate ${L(c=>f(c.HR)+' bpm')}; stroke volume ${L(c=>f(c.SV)+' mL')}; cardiac output ${L(c=>f(c.CO,1)+' L/min')}. `;
+  else if(tab==='fs') h+=`filling pressure ${L(c=>f(c.Pfill,1)+' mmHg')}; end-diastolic volume ${L(c=>f(c.EDV)+' mL')}; stroke volume ${L(c=>f(c.SV)+' mL')}. A higher curve means more stroke volume at the same filling pressure. `;
+  else h+=`end-diastolic volume ${L(c=>f(c.EDV)+' mL')}; end-systolic volume ${L(c=>f(c.ESV)+' mL')}; stroke volume (loop width) ${L(c=>f(c.SV)+' mL')}; peak pressure ${L(c=>f(c.Psys)+' mmHg')}. `;
+  h+=flat?`Maximal heart rates match (set mostly by age), so the higher maximal output of the fitter heart comes from a larger stroke volume.`:`The fitter heart is larger and more compliant, so it fills more and pumps more per beat; it needs fewer beats to deliver the same output, and reaches a higher output when working.`;
+  return `<p>${h}</p>`;
+}
 function explain(){
   const c=cur,r=base; let t='',meta='';
   const R=restFor(st.person), up=k=>st[k]>R[k], dn=k=>st[k]<R[k], same=k=>st[k]===R[k];
@@ -605,7 +617,7 @@ function explain(){
   }
   if(tab==='vt'&&key==='intro') { t='Pick a scenario or move a cause slider. Watch the arteriole radius in each bed, then the total resistance and blood pressure.'; meta='Tip: predict which beds widen and which narrow before you run Endurance exercise.' }
   if(tab==='vt'&&['ex','post','HR','con','stiff','res','bv','tone','mp','tp','baro'].includes(key)) t+=' '+vtChain();
-  $('#explain').innerHTML=`<h2>What changed and why</h2><p>${t}</p>${meta?`<p class="meta">${meta}</p>`:''}`;
+  $('#explain').innerHTML=`<h2>What changed and why</h2><p>${t}</p>${cmpText()}${meta?`<p class="meta">${meta}</p>`:''}`;
 }
 const vtRel=b=>Math.pow(cur.e.bed.G[b]/BED0[b],0.25), vtShare=b=>100*cur.e.bed.G[b]/cur.e.bed.Gt;
 const vtR=b=>{const x=vtRel(b);return Math.abs(x-1)<0.03?'unchanged':(x>1?'wider, ×':'narrower, ×')+x.toFixed(2)};
@@ -1185,7 +1197,7 @@ function buildTabs(){
 function resetOpts(){details=false;showAll=false;showRef=true;hrq='co';syncOpts()}
 function syncOpts(){$('#showDet').checked=details;$('#showAll').checked=showAll;$('#showRef').checked=showRef}
 function setTab(t){
-  const was=tab; tab=t; resetOpts(); circSel=null; cycSel=null; vtSel=null;
+  const was=tab; tab=t; resetOpts(); explain(); circSel=null; cycSel=null; vtSel=null;
   for(const b of $('#tabs').children)b.classList.toggle('on',b.dataset.t===t);
   document.body.classList.toggle('ov',t==='ov');
   if(was==='ov'||t==='ov'){ const host=$('.chartwrap'); host.innerHTML='<svg id="chart" role="img" aria-label="Interactive chart"></svg>'; }
@@ -1201,7 +1213,7 @@ function redraw(){
   $('#allWrap').style.display=CMPTABS.includes(tab)?'':'none';
   $('#detWrap').style.display=['pv','cyc','fs','hr','vt'].includes(tab)?'':'none';
   $('#refWrap').style.display=(['circ'].includes(tab)||SA())?'none':'';
-  syncOpts();
+  syncOpts(); for(const e of [$('#cmp').previousElementSibling,$('#cmp'),$('#cmpcap')]) e.hidden=SA();
   const c=$('#chart'); if(c) c.setAttribute('aria-label',T[1]+' chart');
 }
 function update(){
@@ -1291,7 +1303,7 @@ document.body.classList.add('ov');
 buildCtl(); buildChips(); buildSheets(); buildOverview(); buildScn(); buildTabs();
 details=false; $('#showDet').checked=false;
 $('#showRef').onchange=e=>{showRef=e.target.checked;redraw()};
-$('#showAll').onchange=e=>{showAll=e.target.checked;redraw()};
+$('#showAll').onchange=e=>{showAll=e.target.checked;explain();redraw()};
 $('#showDet').onchange=e=>{details=e.target.checked;redraw()};
 $('#chart').parentNode.addEventListener('click',chartClick); $('.chartwrap').addEventListener('keydown',chartKey);
 $('#spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.v;for(const x of $('#spd').children){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b)}};
