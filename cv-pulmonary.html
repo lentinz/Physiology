@@ -519,8 +519,8 @@ const SELTXT={
   chem:['Chemoreceptors','Peripheral chemoreceptors (and receptors in the medulla) detect CO₂, H⁺, K⁺ and temperature. Small rises in PCO₂ cause large rises in ventilation, so this input drives the slower continued rise, and keeps ventilation elevated into recovery.'],
   center:['Brainstem respiratory centers','Neurons in the brainstem activate the inspiratory muscles for automatic breathing. When stimulation stops, elastic recoil causes passive expiration.'],
   muscles:['Ventilatory muscles','Diaphragm and external intercostals at rest. In exercise, scalenes, sternomastoid and pectoral muscles help inhalation, and abdominals and internal intercostals force exhalation.'],
-  co2:['CO₂ response','Ventilation rises steeply as PCO₂ rises above about 40 mmHg. This is the strongest chemical drive.'],
-  o2c:['O₂ response','Falling PO₂ increases ventilation only slightly until arterial PO₂ is quite low (about 60 mmHg), then more steeply.']
+  co2:['CO₂ response','Chemoreceptors in the blood have the greatest control on breathing at rest. Small increases in PCO₂ cause large increases in minute ventilation. CO₂ is the strongest chemical drive.</p><p>On this chart, ventilation rises by about 2.5 L/min for every 1 mmHg rise in PCO₂ above 40. The ring marks rest and the dot shows where the person is now.'],
+  o2c:['O₂ response','Decreases in PO₂ only slightly increase ventilation until arterial PO₂ falls to about 60 mmHg. This is why breathing changes little at moderate altitude.</p><p>The curve shows the effect of low PO₂ alone, with PCO₂ held at 40. In a real climb, ventilation rises more than at sea level but less than this curve, because breathing harder lowers PCO₂ and that removes some drive. The square shows where the person is now.']
  },
  fit:{
   vt:['Ventilatory threshold','The point where ventilation starts to climb faster than oxygen use. In the lecture figure it lines up with the lactate threshold.'],
@@ -681,7 +681,14 @@ function drawVol(W){
   }
   if(diffRef()){a+=[DG.EELV,DG.EILV].map(v=>`<line class="gh" x1="${P.m.l}" x2="${Xr}" y1="${P.Y(v).toFixed(1)}" y2="${P.Y(v).toFixed(1)}"/>`).join('')}
   a+=`<path class="cv" style="stroke:var(--fg);stroke-width:2.6" d="${pth(pts,P)}"/>`;
-  a+=`<text class="lb s" x="${P.X(1.6)}" y="${P.Y(E+A)-8}" text-anchor="middle" style="font-size:10.5px">quiet breathing</text>`;
+  const sameQ=Math.abs(D.TV-DR.TV)<0.005&&Math.abs(D.EELV-DR.EELV)<0.005;
+  if(!sameQ){
+    const qE=DR.EELV, qA=DR.TV, q1=[], q2=[];
+    for(let u=0;u<=3.2;u+=0.05) q1.push([u,qE+qA*(0.5-0.5*Math.cos(2*Math.PI*u/tp))]);
+    for(let u=7.2;u<=9.334;u+=0.05) q2.push([u,qE+qA*(0.5-0.5*Math.cos(2*Math.PI*(u-7.2)/tp))]);
+    a+=`<path d="${pth(q1,P)}" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-dasharray="5 4"/><path d="${pth(q2,P)}" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-dasharray="5 4"/>`;
+  }
+  a+=`<text class="lb s" x="${Math.max(P.m.l+42,P.X(1.6))}" y="${P.Y(E+A)-8}" text-anchor="middle" style="font-size:10.5px">${sameQ?'quiet breathing':'tidal breathing'}</text>`;
   a+=`<text class="lb s" x="${P.X(4.2)}" y="${P.Y(TLC)-6}" text-anchor="middle" style="font-size:10.5px">maximal breath in</text>`;
   a+=`<text class="lb s" x="${P.X(5.5)}" y="${P.Y(RV)-6}" text-anchor="middle" style="font-size:10.5px">maximal breath out</text>`;
   const val={irv:TLC-D.EILV,tv:D.TV,erv:D.ERV,rv:RV}, nm={irv:'IRV',tv:'TV',erv:'ERV',rv:'RV'};
@@ -692,7 +699,11 @@ function drawVol(W){
   }
   a+=`<line id="liveV" x1="${P.m.l}" x2="${Xr}" y1="${P.Y(E)}" y2="${P.Y(E)}" stroke="var(--act)" stroke-width="1.4" stroke-dasharray="2 3"/><circle id="liveD" r="4.6" fill="var(--act)" stroke="var(--panel)" stroke-width="1.5" cx="${Xr}" cy="${P.Y(E)}"/>`;
   a+=`<text class="lb s" x="${P.m.l+4}" y="${P.m.t+10}" style="font-size:10.5px;fill:var(--act)">dashed red line = the air in the lungs right now</text>`;
-  setSvg(W,H,a);
+  /* legend */
+  const ly=H+10;
+  if(sameQ) a+=`<text class="lb s" x="${P.m.l}" y="${ly+4}" style="font-size:10.5px;fill:var(--fg)">At rest, quiet breathing and tidal breathing are the same breath.</text>`;
+  else a+=`<path d="M${P.m.l} ${ly}h22" stroke="var(--mut)" stroke-width="2.2" stroke-dasharray="5 4"/><text class="lb s" x="${P.m.l+28}" y="${ly+4}" style="font-size:10.5px;fill:var(--fg)">quiet breathing (rest size, stays fixed)</text><path d="M${P.m.l} ${ly+16}h22" stroke="var(--fg)" stroke-width="2.6"/><text class="lb s" x="${P.m.l+28}" y="${ly+20}" style="font-size:10.5px;fill:var(--fg)">tidal breathing (now)</text>`;
+  setSvg(W,H+(sameQ?22:38),a);
 }
 function frVol(t){
   const R=refs.vol; if(!R||!gid('liveV')) return;
@@ -893,19 +904,55 @@ function drawCtl(W){
   for(const [t,l] of [[M.t0,'start'],[M.t1,'stop']]) a+=`<line x1="${P.X(t).toFixed(1)}" x2="${P.X(t).toFixed(1)}" y1="${P.m.t}" y2="${P.m.t+P.h}" stroke="var(--sa)" stroke-width="1.2" stroke-dasharray="5 4"/><text class="lb s" x="${(P.X(t)+4).toFixed(1)}" y="${P.m.t+11}" style="font-size:10.5px">exercise ${l}s</text>`;
   if(D.VE-M.base<0.5) a+=`<text class="lb" x="${P.m.l+P.w/2}" y="${P.m.t+P.h/2}" text-anchor="middle" style="font-size:12px">Raise the exercise intensity to see the response.</text>`;
   a+=`<line id="ccur" x1="${P.X(0)}" x2="${P.X(0)}" y1="${P.m.t}" y2="${P.m.t+P.h}" stroke="var(--act)" stroke-width="1.2" stroke-dasharray="3 3"/><circle id="cdot" r="4.6" fill="var(--accent)" stroke="var(--panel)" stroke-width="1.5" cx="${P.X(0)}" cy="${P.Y(M.base)}"/>`;
-  /* stimulus-response curves */
-  const y5=y0+h+34+22, h5=wide?110:104, VEb=DR.VE;
-  const xa=0, xb=wide?Math.round(W/2)+8:0, y6=wide?y5:y5+h5+58;
-  const rw=wide?Math.round(W/2)-18:W-10;
-  const Pc=PL(W,y5+h5+28,{l:xa+50,r:W-xa-rw-10+10,t:y5,b:28},[25,60],[0,130]);
-  const Po=PL(W,y6+h5+28,{l:xb+50,r:10,t:y6,b:28},[20,150],[0.9,1.5]);
-  a+=axes(Pc,[30,40,50,60],[0,50,100],'Alveolar PCO₂ (mmHg)','Ventilation (L/min)',v=>v,v=>v);
-  const cp=[];for(let p=25;p<=60;p+=1) cp.push([p,Math.max(0.3*VEb,VEb+2.5*(p-40))]);
-  a+=`<path class="cv" style="stroke:var(--accent)" d="${pth(cp,Pc)}"/>`+tl('co2','CO₂ response',Pc.m.l+6,Pc.m.t+12,'start',{fs:11.5})+`<circle cx="${Pc.X(clamp(D.PACO2,25,60)).toFixed(1)}" cy="${Pc.Y(D.VE).toFixed(1)}" r="5.4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>`;
-  a+=axes(Po,[40,70,100,130],[1,1.25,1.5],'Inspired PO₂ (mmHg)','Chemical drive (× rest)',v=>v,v=>v);
-  const op=[];for(let p=20;p<=150;p+=2){const hh=clamp((90-p)/50,0,1);op.push([p,1+0.35*hh*hh])}
-  a+=`<path class="cv" style="stroke:var(--sa)" d="${pth(op,Po)}"/>`+tl('o2c','O₂ response',Po.m.l+6,Po.m.t+12,'start',{fs:11.5})+`<rect x="${(Po.X(clamp(D.pest,20,150))-5).toFixed(1)}" y="${(Po.Y(D.fh)-5).toFixed(1)}" width="10" height="10" fill="var(--sa)" stroke="var(--panel)" stroke-width="2"/>`;
-  const H=wide?y5+h5+44:y6+h5+44;
+  /* stimulus-response curves: both charts use the same y-axis (minute ventilation, 0 to 60 L/min) */
+  const VER=6, YM=60;
+  const wr=(txt,x,y,maxW,o={})=>{const fs=o.fs||11,cw=fs*0.54,mx=Math.max(8,Math.floor(maxW/cw)),lh=o.lh||fs+3,ws=txt.split(' '),ls=[];let c='';
+    for(const w of ws){if((c?c+' '+w:w).length>mx){ls.push(c);c=w}else c=c?c+' '+w:w} if(c)ls.push(c);
+    return {n:ls.length,h:ls.length*lh,svg:ls.map((l,q)=>`<text class="${o.cls||'lb s'}" x="${x}" y="${y+q*lh}" style="${o.st||''}font-size:${fs}px">${l}</text>`).join('')}};
+  const yT0=y0+h+34+16;
+  const tt=wr('Chemical control at rest: which signal drives breathing more?',6,yT0,W-12,{fs:wide?13:12.5,cls:'lb',st:'font-weight:600;',lh:16});
+  a+=tt.svg;
+  const top=yT0+tt.h-6, h5=wide?118:112, rw=wide?Math.round(W/2)-18:W-10, xb=wide?Math.round(W/2)+8:0;
+  const cw1=wide?rw-8:W-16, cw2=wide?W-xb-14:W-16;
+  const co2Call='A 5 mmHg rise in PCO₂ (40 to 45) roughly triples ventilation.', o2Call='PO₂ can fall from 95 to about 60 mmHg with little change in ventilation.';
+  const c1=wr(co2Call,xb*0+8,0,cw1,{fs:11,cls:'lb',st:'font-weight:500;'}), c2=wr(o2Call,0,0,cw2,{fs:11,cls:'lb',st:'font-weight:500;'});
+  const hdrH=wide?Math.max(c1.h,c2.h):0;
+  const plotTop2=wide?top+22+hdrH+6:0, plotTop1=wide?plotTop2:top+22+c1.h+6;
+  const cap1txt='During exercise, ventilation rises even though PCO₂ stays near 40. The extra breathing comes from central command and joint and muscle input, which is the solid blue area in the timeline above.';
+  const cap2txt='Use the elevation slider to lower PO₂. Ventilation rises only once PO₂ drops a lot.'+(st.elev>0?' Actual ventilation sits below the curve because the fall in PCO₂ at altitude opposes the O₂ drive.':'');
+  const k1=wr(cap1txt,8,0,cw1,{fs:11}), k2=wr(cap2txt,0,0,cw2,{fs:11});
+  const Pc=PL(W,plotTop1+h5+30,{l:50,r:W-rw,t:plotTop1,b:30},[25,60],[0,YM]);
+  const capY1=plotTop1+h5+30+14;
+  let top2,plotTop2b;
+  if(wide){top2=top;plotTop2b=plotTop2}
+  else{top2=capY1+k1.h+10;plotTop2b=top2+22+c2.h+6}
+  const Po=PL(W,plotTop2b+h5+30,{l:xb+50,r:10,t:plotTop2b,b:30},[40,110],[0,YM]);
+  const capY2=plotTop2b+h5+30+14;
+  /* CO2 chart */
+  const lblY1=top+12, lblY2=top2+12;
+  a+=tl('co2','CO₂ response',8,lblY1,'start',{fs:11.5});
+  a+=wr(co2Call,8,lblY1+15,cw1,{fs:11,cls:'lb',st:'font-weight:500;'}).svg;
+  a+=axes(Pc,[30,40,50,60],[0,20,40,60],'PCO₂ (mmHg)','Minute ventilation (L/min)',v=>v,v=>v);
+  const cp=[];for(let p=25;p<=60;p+=1) cp.push([p,Math.max(0.3*VER,VER+2.5*(p-40))]);
+  a+=`<path class="cv" style="stroke:var(--accent)" d="${pth(cp,Pc)}"/><path d="${pth([[40,VER],[45,VER+12.5]],Pc)}" fill="none" stroke="var(--accent)" stroke-width="6" stroke-opacity=".35" stroke-linecap="round"/>`;
+  a+=`<circle cx="${Pc.X(40).toFixed(1)}" cy="${Pc.Y(VER).toFixed(1)}" r="7.5" fill="none" stroke="var(--fg)" stroke-width="1.6"/><text class="lb s" x="${(Pc.X(40)+11).toFixed(1)}" y="${(Pc.Y(VER)+14).toFixed(1)}" style="font-size:10.5px;fill:var(--fg)">rest</text>`;
+  const pin=(Pq,xv,yv,shape,col)=>{const off=yv>YM, cx=Pq.X(xv), cy=off?Pq.Y(YM)+7:Pq.Y(yv);
+    let s=shape==='c'?`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5.4" fill="${col}" stroke="var(--panel)" stroke-width="2"/>`:`<rect x="${(cx-5).toFixed(1)}" y="${(cy-5).toFixed(1)}" width="10" height="10" fill="${col}" stroke="var(--panel)" stroke-width="2"/>`;
+    if(off){const left=cx<Pq.m.l+Pq.w*0.5;s+=`<text class="lb s" x="${(left?cx+10:cx-10).toFixed(1)}" y="${(cy+4).toFixed(1)}" text-anchor="${left?'start':'end'}" style="font-size:10.5px;fill:var(--fg)">▲ off scale: ${fx(yv)} L/min</text>`}
+    return s};
+  a+=pin(Pc,clamp(D.PACO2,25,60),D.VE,'c','var(--accent)');
+  a+=k1.n?wr(cap1txt,8,capY1,cw1,{fs:11}).svg:'';
+  /* O2 chart */
+  a+=tl('o2c','O₂ response',xb+8,lblY2,'start',{fs:11.5});
+  a+=wr(o2Call,xb+8,lblY2+15,cw2,{fs:11,cls:'lb',st:'font-weight:500;'}).svg;
+  a+=axes(Po,[40,60,80,100],[0,20,40,60],'Arterial PO₂ (mmHg)','Minute ventilation (L/min)',v=>v,v=>v);
+  const o2v=p=>p>=95?VER:VER+0.5*clamp((95-p)/35,0,1)+8.5*Math.pow(clamp((60-p)/20,0,1),1.5);
+  const op=[];for(let p=40;p<=110;p+=1) op.push([p,o2v(p)]);
+  a+=`<path class="cv" style="stroke:var(--sa)" d="${pth(op,Po)}"/><path d="${pth([[95,VER],[60,o2v(60)]],Po)}" fill="none" stroke="var(--sa)" stroke-width="6" stroke-opacity=".35" stroke-linecap="round"/>`;
+  a+=`<circle cx="${Po.X(95).toFixed(1)}" cy="${Po.Y(VER).toFixed(1)}" r="7.5" fill="none" stroke="var(--fg)" stroke-width="1.6"/><text class="lb s" x="${Po.X(95).toFixed(1)}" y="${(Po.Y(VER)-12).toFixed(1)}" text-anchor="middle" style="font-size:10.5px;fill:var(--fg)">rest</text>`;
+  a+=pin(Po,clamp(D.PaO2,40,110),D.VE,'s','var(--sa)');
+  a+=wr(cap2txt,xb+8,capY2,cw2,{fs:11}).svg;
+  const H=wide?Math.max(capY1+k1.h,capY2+k2.h)+10:capY2+k2.h+10;
   setSvg(W,H,a);
 }
 function frCtl(t){
@@ -992,7 +1039,7 @@ function renderEvl(){
   else if(tab==='ctl'){
     const M=ctlModel(d);
     h=tbl('Ventilation (L/min)',[row('cc','Resting level',fx(M.base,1),fx(M.base,1)),row('cc','Fast rise (central command, joint and muscle)','0.0',fx(M.A,1)),row('chem','Slow rise (chemical)','0.0',fx(M.B,1)),row('','Steady-state ventilation',fx(r.VE,1),fx(d.VE,1))]);
-    h+=`<p class="cap">Marker speed: the timeline runs ${CTL_RATE}× faster than real time. In the two small charts, the dot sits above the resting CO₂ line during exercise because neural drive adds to the chemical drive. Time constants and the fast/slow split are illustrative.</p>`;
+    h+=`<p class="cap">Marker speed: the timeline runs ${CTL_RATE}× faster than real time. Time constants and the fast/slow split are illustrative.</p>`;
   }
   else if(tab==='fit'){
     const P=PERS[st.person], ok=b=>b?'✓ met':'not yet';
