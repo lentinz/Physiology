@@ -13,16 +13,16 @@
   --accent:#4cc2ff; --accent-ink:#04141f; --rest:#2b4157; --act:#ff6b5a; --ecg:#6ee7b7; --sa:#ffc15e; --vent:#ff8a70;
   --iNa:#ffb454; --iCa:#6ee7b7; --iK:#5ec8ff; --iTo:#f2d46b; --iK1:#8aa0b8; --iF:#a99bff; --iAch:#ff8fb1; --force:#4cc2ff; --ca:#ffc15e;
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-  color-scheme:dark;
+  --pD:#f07ac8; --pT:#b9c5d2; --pE:#b4e04f; color-scheme:dark;
 }
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
   --bg:#f1f4f8; --panel:#ffffff; --panel2:#e9eef4; --line:#d3dce7; --fg:#14202b; --mut:#536274; --faint:#8794a4;
   --accent:#0a6cab; --accent-ink:#ffffff; --rest:#cbd7e4; --act:#d9412d; --ecg:#0b8559; --sa:#9a5d00; --vent:#c24026;
-  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; color-scheme:light}}
+  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; --pD:#b0268a; --pT:#3e5063; --pE:#5c8a00; color-scheme:light}}
 :root[data-theme="light"]{
   --bg:#f1f4f8; --panel:#ffffff; --panel2:#e9eef4; --line:#d3dce7; --fg:#14202b; --mut:#536274; --faint:#8794a4;
   --accent:#0a6cab; --accent-ink:#ffffff; --rest:#cbd7e4; --act:#d9412d; --ecg:#0b8559; --sa:#9a5d00; --vent:#c24026;
-  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; color-scheme:light}
+  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; --pD:#b0268a; --pT:#3e5063; --pE:#5c8a00; color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--sans);padding-block:12px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:9px;min-height:36px;padding:0 12px;cursor:pointer;touch-action:manipulation}
@@ -152,6 +152,8 @@ button[aria-pressed="true"]#pause{background:var(--accent);color:var(--accent-in
 .pers button{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-height:50px;padding:6px 8px;text-align:left;line-height:1.2}
 .pers button b{font-weight:600;font-size:13.5px}
 .pers button span{font-size:10.5px;color:var(--mut)}
+.pm{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px;background:var(--pc)}
+.pm.D{border-radius:50%;--pc:var(--pD)}.pm.T{--pc:var(--pT)}.pm.E{transform:rotate(45deg) scale(.85);--pc:var(--pE)}
 .cap{font-size:12px;color:var(--mut);margin:6px 0 0}
 .endl{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:-4px}
 body.ov .chips,body.ov #mini,body.ov #ctl,body.ov #concept,body.ov .explain,body.ov #chartCard{display:none}
@@ -342,7 +344,7 @@ function derive(s){
 
 /* ================= state ================= */
 const restFor=p=>({person:p,ex:0,elev:0,pat:0,cond:null});
-let st=restFor('T'), cmpMode='typ', last='intro', sceneNote='rest', tab='ov', details=LS.get('cvP_det')==='1', showRef=true, showAll=false;
+let st=restFor('T'), cmpMode='typ', last='intro', sceneNote='rest', tab='ov', details=LS.get('cvP_det')==='1', showRef=true, showAll=false, vq='tv';
 let D=derive(st), DR=derive(st), clock=0, speed=0.5, paused=false;
 let sel={air:null,vol:null,vent:null,gas:null,o2:null,ctl:null,fit:null};
 let activeObj=null, conceptOpen=LS.get('cvP_concept')!=='0', termOpen=null, evOpen=null, refs={};
@@ -360,7 +362,7 @@ const SCN=[
 ];
 const SCN_TAB={air:['rest','ex50','ex100'],vol:['rest','ex50','ex100'],vent:['rest','ex50','ex100','vt','shallow','deep'],gas:['rest','ex50','ex100','denver','alt14'],o2:['rest','ex50','ex100','denver','alt14'],ctl:['rest','ex50','ex100','denver','alt14'],fit:['rest','ex50','ex100','vt']};
 function buildCtl(){
-  $('#ctl').innerHTML=`<div id="blkPerson"><h3>Person</h3><div class="pers" id="pers">${['D','T','E'].map(p=>`<button type="button" data-p="${p}"><b>${PERS[p].name}</b><span>${PERS[p].desc}</span></button>`).join('')}</div>
+  $('#ctl').innerHTML=`<div id="blkPerson"><h3>Person</h3><div class="pers" id="pers">${['D','T','E'].map(p=>`<button type="button" data-p="${p}"><b><i class="pm ${p}"></i>${PERS[p].name}</b><span>${PERS[p].desc}</span></button>`).join('')}</div>
   <div class="row2" style="margin:8px 0 0"><span style="font-size:12px;color:var(--mut)">Dashed line shows</span><span class="seg" id="cmp"><button type="button" data-m="typ">Typical person</button><button type="button" data-m="rest">This person at rest</button></span></div>
   <p class="cap" id="cmpCap"></p></div>
   <h3>Scenarios</h3><div class="scn" id="scn"></div>
@@ -582,7 +584,7 @@ function sampleB(d,win,n){const o=[];for(let i=0;i<=n;i++){const t=win*i/n,b=bre
 const panel=(W,x0,y0,hh,xr,yr,bm=22,rm=8,lm=46)=>PL(W,y0+hh+bm,{l:x0+lm,r:rm,t:y0,b:bm},xr,yr);
 const gid=id=>document.getElementById(id);
 const stS=k=>isSel(k)?'stroke:var(--accent);stroke-width:3.4;':'';
-const hatch=`<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--panel)"/><path d="M0 0V6" stroke="var(--mut)" stroke-width="2"/></pattern><pattern id="hatchA" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="6" height="6" fill="var(--panel)"/><path d="M0 0V6" stroke="var(--accent)" stroke-width="2"/></pattern></defs>`;
+const hatch=`<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--panel)"/><path d="M0 0V6" stroke="var(--mut)" stroke-width="2"/></pattern><pattern id="hatchA" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="6" height="6" fill="var(--panel)"/><path d="M0 0V6" stroke="var(--accent)" stroke-width="2"/></pattern>${['D','T','E'].map(p=>`<pattern id="hP_${p}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="6" height="6" fill="var(--panel)"/><path d="M0 0V6" stroke="var(--p${p})" stroke-width="2"/></pattern>`).join('')}</defs>`;
 const diffRef=()=>showRef&&(Math.abs(D.VE-DG.VE)+Math.abs(D.TV-DG.TV)+Math.abs(D.PAO2-DG.PAO2)+Math.abs(D.PvO2-DG.PvO2)+Math.abs(D.RR-DG.RR))>1e-6;
 const niceTicks=(lo,hi,n=4)=>{const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/mag,s=(f<1.5?1:f<3.5?2:f<7.5?5:10)*mag;const r=[];for(let v=Math.ceil(lo/s)*s;v<=hi+1e-9;v+=s)r.push(+v.toFixed(6));return r};
 
@@ -731,32 +733,57 @@ function frMini(t){
 /* ----- ventilation ----- */
 const curveOf=(base,fn,step=2.5)=>{const o=[];for(let x=0;x<=100.001;x+=step)o.push([x,fn(derive({...base,ex:x}),x)]);return o};
 const PDASH={D:'2 4',T:'',E:'9 4'};
+const PC={D:'var(--pD)',T:'var(--pT)',E:'var(--pE)'};
+function pmark(p,cx,cy,r=5.5){const s=`fill="${PC[p]}" stroke="var(--panel)" stroke-width="2"`;
+  if(p==='D')return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" ${s}/>`;
+  if(p==='T')return `<rect x="${(cx-r).toFixed(1)}" y="${(cy-r).toFixed(1)}" width="${2*r}" height="${2*r}" ${s}/>`;
+  const q=r*1.4;return `<path d="M${cx.toFixed(1)} ${(cy-q).toFixed(1)}L${(cx+q).toFixed(1)} ${cy.toFixed(1)}L${cx.toFixed(1)} ${(cy+q).toFixed(1)}L${(cx-q).toFixed(1)} ${cy.toFixed(1)}Z" ${s}/>`}
+function pLegend(x,y){let s=`<text class="lb s" x="${x}" y="${y+4}" style="font-size:10.5px">Compare all three:</text>`,xx=x+96;
+  for(const p of ['D','T','E']){const nm=PERS[p].name,on=p===st.person;s+=`<path d="M${xx} ${y}h20" stroke="${PC[p]}" stroke-width="${on?3.6:2.2}" stroke-linecap="round"/>`+pmark(p,xx+10,y,4)+`<text class="lb" x="${xx+26}" y="${y+4}" style="font-size:11.5px;${on?'font-weight:700':''}">${nm}</text>`;xx+=26+nm.length*6.6+14}
+  return s}
+function spreadY(items,gap){const it=items.slice().sort((p,q)=>p.y-q.y);for(let i=1;i<it.length;i++)if(it[i].y-it[i-1].y<gap)it[i].y=it[i-1].y+gap;return it}
+const PLW=p=>p===st.person?3.6:2.2;
+function endLabels(P,curves,xr){return spreadY(['D','T','E'].map(p=>({p,y:P.Y(curves[p][curves[p].length-1][1])-6})),13).map(o=>`<text class="lb" x="${(P.X(xr)-6).toFixed(1)}" y="${o.y.toFixed(1)}" text-anchor="end" style="font-size:11px;font-weight:600;fill:${PC[o.p]}">${PERS[o.p].name}</text>`).join('')}
+
 function drawVent(W){
   const wide=W>=640, colW=wide?Math.round(W*0.6):W;
-  const h1=wide?130:112, h2=wide?112:100, y1=16, y2=y1+h1+38;
+  const LG=showAll?26:0, h1=wide?130:112, h2=wide?112:100, y1=16+LG, y2=y1+h1+38+(showAll?18:0);
   const mk=(y0,hh,yr,rm,bm=22)=>PL(colW,y0+hh+bm,{l:46,r:rm,t:y0,b:bm},[0,100],yr);
   const A=mk(y1,h1,[0,130],8), B=mk(y2,h2,[0,3],52,36);
-  const y3=wide?y1:y2+h2+58, x3=wide?colW+14:0, h3=wide?h1+38+h2:130;
+  const y3=wide?y1:y2+h2+58, x3=wide?colW+14:0, h3=wide?y2+h2-y1:130;
   const C=PL(W,y3+h3+62,{l:x3+46,r:10,t:y3,b:62},[0,1],[0,130]);
   const H=wide?y2+h2+50:y3+h3+70;
   refs.vent={A,B,C};
-  let a=hatch;
+  let a=hatch+(showAll?pLegend(A.m.l,14):'');
   const base={...st}, rf={person:DG.s.person,elev:DG.s.elev,pat:DG.s.pat};
   /* A: minute ventilation vs intensity */
   a+=axes(A,[0,25,50,75,100],[0,30,60,90,120],'','Minute ventilation (L/min)',v=>v+'%',v=>v);
   const xT=PERS[st.person].xT;
   a+=`<line x1="${A.X(xT).toFixed(1)}" x2="${A.X(xT).toFixed(1)}" y1="${A.m.t}" y2="${A.m.t+A.h}" stroke="var(--sa)" stroke-width="1.4" stroke-dasharray="5 4"/><text class="lb s" x="${(A.X(xT)+4).toFixed(1)}" y="${A.Y(100).toFixed(1)}" text-anchor="start" style="font-size:10.5px">ventilatory threshold</text>`;
   if(showAll){
-    for(const p of ['D','T','E']){const c=curveOf({...base,person:p},d=>d.VE);a+=`<path class="cv" style="stroke:var(--accent);stroke-width:${p===st.person?3:1.8};stroke-dasharray:${PDASH[p]}" d="${pth(c,A)}"/><text class="lb" x="${(A.X(100)-4).toFixed(1)}" y="${(A.Y(c[c.length-1][1])+(p==='D'?14:-5)).toFixed(1)}" text-anchor="end" style="font-size:11px">${PERS[p].name}</text>`}
+    const cs={};
+    for(const p of ['D','T','E']){cs[p]=curveOf({...base,person:p},d=>d.VE);a+=`<path class="cv" style="stroke:${PC[p]};stroke-width:${PLW(p)}" d="${pth(cs[p],A)}"/>`}
+    a+=endLabels(A,cs,100);
   } else {
     if(diffRef()) a+=`<path class="gh" d="${pth(curveOf({...base,...rf},d=>d.VE),A)}"/>`;
     a+=`<path class="cv" style="stroke:var(--accent)" d="${pth(curveOf(base,d=>d.VE),A)}"/>`;
   }
   a+=tl('ve','Minute ventilation',A.X(3),A.Y(124),'start',{fs:11.5});
-  a+=`<circle cx="${A.X(st.ex).toFixed(1)}" cy="${A.Y(D.VE).toFixed(1)}" r="5.5" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>`;
+  if(showAll){for(const p of ['D','T','E']) a+=pmark(p,A.X(st.ex),A.Y(derive({...st,person:p}).VE),p===st.person?6.5:5)}
+  else a+=`<circle cx="${A.X(st.ex).toFixed(1)}" cy="${A.Y(D.VE).toFixed(1)}" r="5.5" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>`;
   if(diffRef()&&!showAll) a+=`<circle cx="${A.X(st.ex).toFixed(1)}" cy="${A.Y(DG.VE).toFixed(1)}" r="5" fill="var(--panel)" stroke="var(--faint)" stroke-width="2"/>`;
   /* B: tidal volume and rate */
   const yR=v=>v/50*3;
+  if(showAll){
+    const q=vq, fn=q==='tv'?(d=>d.TV):(d=>yR(d.RR));
+    a+=axes(B,[0,25,50,75,100],q==='tv'?[0,1,2,3]:[],'Exercise intensity (% of own max)',q==='tv'?'Tidal volume (L)':'Breaths per minute',v=>v+'%',v=>v);
+    if(q==='rr') for(const v of [0,10,20,30,40,50]) a+=`<path class="gl" d="M${B.m.l} ${B.Y(yR(v)).toFixed(1)}H${B.m.l+B.w}"/><text class="tk" x="${B.m.l-6}" y="${(B.Y(yR(v))+3.5).toFixed(1)}" text-anchor="end">${v}</text>`;
+    const cs={};for(const p of ['D','T','E']){cs[p]=curveOf({...base,person:p},fn);a+=`<path class="cv" style="stroke:${PC[p]};stroke-width:${PLW(p)}" d="${pth(cs[p],B)}"/>`}
+    a+=endLabels(B,cs,100);
+    for(const p of ['D','T','E']) a+=pmark(p,B.X(st.ex),B.Y(fn(derive({...st,person:p}))),p===st.person?6.5:5);
+    const chip=(id,txt,x)=>`<g data-qty="${id}" tabindex="0" role="button" aria-label="Show ${txt}" style="cursor:pointer"><rect x="${x}" y="${y2-24}" width="${txt.length*6.6+18}" height="19" rx="9.5" fill="${q===id?'var(--accent)':'var(--panel2)'}" fill-opacity="${q===id?.22:1}" stroke="${q===id?'var(--accent)':'var(--line)'}" stroke-width="${q===id?2:1}"/><text class="lb s" x="${x+9}" y="${y2-11}" style="font-size:10.5px;fill:var(--fg)">${txt}</text></g>`;
+    a+=chip('tv','Tidal volume',B.m.l)+chip('rr','Breathing rate',B.m.l+12*6.6+26);
+  } else {
   a+=axes(B,[0,25,50,75,100],[0,1,2,3],'Exercise intensity (% of own max)','Tidal volume (L)',v=>v+'%',v=>v);
   for(const v of [0,10,20,30,40,50]) a+=`<text class="tk" x="${B.m.l+B.w+5}" y="${(B.Y(yR(v))+3.5).toFixed(1)}" style="fill:var(--sa)">${v}</text>`;
   a+=`<text class="ax" transform="translate(${B.m.l+B.w+44} ${B.m.t+B.h/2}) rotate(90)" text-anchor="middle" style="fill:var(--sa)">Breaths per minute</text>`;
@@ -766,6 +793,7 @@ function drawVent(W){
   a+=tl('tv','Tidal volume',B.X(46),B.Y(cTV[18][1])-10,'end',{fs:11.5,col:'var(--accent)'});
   a+=tl('rr','Respiratory rate',B.X(98),B.Y(cRR[38][1])+17,'end',{fs:11.5,col:'var(--sa)'});
   a+=`<circle cx="${B.X(st.ex).toFixed(1)}" cy="${B.Y(D.TV).toFixed(1)}" r="5.2" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/><rect x="${(B.X(st.ex)-4.8).toFixed(1)}" y="${(B.Y(yR(D.RR))-4.8).toFixed(1)}" width="9.6" height="9.6" fill="var(--sa)" stroke="var(--panel)" stroke-width="2"/>`;
+  }
   /* C: where the minute ventilation goes */
   const bw=Math.min(56,C.w*0.26), cxa=C.m.l+C.w*0.27, cxb=C.m.l+C.w*0.73;
   for(const v of [0,30,60,90,120]) a+=`<path class="gl" d="M${C.m.l} ${C.Y(v).toFixed(1)}H${C.m.l+C.w}"/><text class="tk" x="${C.m.l-6}" y="${(C.Y(v)+3.5).toFixed(1)}" text-anchor="end">${v}</text>`;
@@ -969,38 +997,40 @@ function frCtl(t){
 /* ----- exercise and VO2max ----- */
 function drawFit(W){
   const wide=W>=640, colW=wide?Math.round(W*0.6):W;
-  const h1=wide?116:104, h2=wide?116:104, y1=16, y2=y1+h1+40;
+  const LG=showAll?26:0, h1=wide?116:104, h2=wide?116:104, y1=16+LG, y2=y1+h1+40;
   const A=PL(colW,y1+h1+22,{l:46,r:10,t:y1,b:22},[0,100],[0,130]);
   const B=PL(colW,y2+h2+36,{l:46,r:10,t:y2,b:36},[0,100],[0,12]);
   const y3=wide?y1:y2+h2+58, x3=wide?colW+14:0, h3=wide?h1+40+h2:130;
-  const C=PL(W,y3+h3+40,{l:x3+46,r:10,t:y3,b:40},[0,3],[0,70]);
+  const C=PL(W,y3+h3+58,{l:x3+46,r:10,t:y3,b:58},[0,3],[0,70]);
   const H=wide?y2+h2+50:y3+h3+56;
   refs.fit={A,B,C};
   const P0=PERS[st.person], base={...st};
   const fx100=(base2)=>{const o=[];for(let x=0;x<=100.001;x+=2.5){const d=derive({...base2,ex:x});o.push([d.pctmax,d])}return o};
   const cur=fx100(base);
-  let a=hatch;
+  let a=hatch+(showAll?pLegend(A.m.l,14):'');
   a+=axes(A,[0,25,50,75,100],[0,30,60,90,120],'','Ventilation (L/min)',v=>v+'%',v=>v);
   const vt=P0.fT*100;
   a+=`<line x1="${A.X(vt).toFixed(1)}" x2="${A.X(vt).toFixed(1)}" y1="${A.m.t}" y2="${A.m.t+A.h}" stroke="var(--sa)" stroke-width="1.4" stroke-dasharray="5 4"/>`+tl('vt','Ventilatory threshold',A.X(vt)-8,A.m.t+12,'end',{fs:11});
-  if(showAll){for(const p of ['D','T','E']){const c=fx100({...base,person:p});a+=`<path class="cv" style="stroke:var(--accent);stroke-width:${p===st.person?3:1.8};stroke-dasharray:${PDASH[p]}" d="${pth(c.map(q=>[q[0],q[1].VE]),A)}"/><circle cx="${A.X(PERS[p].fT*100).toFixed(1)}" cy="${A.Y(130-4).toFixed(1)}" r="0"/>`;a+=`<text class="lb" x="${(A.X(100)-4).toFixed(1)}" y="${(A.Y(c[c.length-1][1].VE)+(p==='D'?14:-5)).toFixed(1)}" text-anchor="end" style="font-size:11px">${PERS[p].name}</text>`}}
+  if(showAll){const cs={};for(const p of ['D','T','E']){const cc=fx100({...base,person:p});cs[p]=cc.map(q=>[q[0],q[1].VE]);a+=`<path class="cv" style="stroke:${PC[p]};stroke-width:${PLW(p)}" d="${pth(cs[p],A)}"/>`}a+=endLabels(A,cs,100)}
   else a+=`<path class="cv" style="stroke:var(--accent)" d="${pth(cur.map(q=>[q[0],q[1].VE]),A)}"/>`;
-  a+=`<circle cx="${A.X(D.pctmax).toFixed(1)}" cy="${A.Y(D.VE).toFixed(1)}" r="5.5" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>`;
+  if(showAll){for(const p of ['D','T','E']){const dp=derive({...st,person:p});a+=pmark(p,A.X(dp.pctmax),A.Y(dp.VE),p===st.person?6.5:5)}}
+  else a+=`<circle cx="${A.X(D.pctmax).toFixed(1)}" cy="${A.Y(D.VE).toFixed(1)}" r="5.5" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>`;
   a+=axes(B,[0,25,50,75,100],[0,4,8,12],'Intensity (% of VO₂max)','Blood lactate (mmol/L)',v=>v+'%',v=>v);
   a+=`<line x1="${B.m.l}" x2="${B.m.l+B.w}" y1="${B.Y(4).toFixed(1)}" y2="${B.Y(4).toFixed(1)}" stroke="var(--faint)" stroke-width="1.2" stroke-dasharray="3 3"/>`+tl('obla','OBLA (4 mmol/L)',B.m.l+4,B.Y(4)-5,'start',{fs:11});
   a+=`<line x1="${B.X(vt).toFixed(1)}" x2="${B.X(vt).toFixed(1)}" y1="${B.m.t}" y2="${B.m.t+B.h}" stroke="var(--sa)" stroke-width="1.4" stroke-dasharray="5 4"/>`+tl('lt','Lactate threshold',B.X(vt)-8,B.m.t+12,'end',{fs:11});
   const lacC=(base2)=>{const o=[];for(let f=0;f<=1.001;f+=0.025){const P=PERS[base2.person];const f0=VO2REST/P.vmax;if(f>=f0-0.0001)o.push([f*100,lactate(f,P)])}return o};
-  if(showAll){for(const p of ['D','T','E']){a+=`<path class="cv" style="stroke:var(--sa);stroke-width:${p===st.person?3:1.8};stroke-dasharray:${PDASH[p]}" d="${pth(lacC({person:p}),B)}"/>`}}
+  if(showAll){const cs={};for(const p of ['D','T','E']){cs[p]=lacC({person:p});a+=`<path class="cv" style="stroke:${PC[p]};stroke-width:${PLW(p)}" d="${pth(cs[p],B)}"/>`}a+=endLabels(B,cs,100)}
   else a+=`<path class="cv" style="stroke:var(--sa)" d="${pth(lacC(base),B)}"/>`;
-  a+=`<rect x="${(B.X(D.pctmax)-5).toFixed(1)}" y="${(B.Y(D.lac)-5).toFixed(1)}" width="10" height="10" fill="var(--sa)" stroke="var(--panel)" stroke-width="2"/>`;
+  if(showAll){for(const p of ['D','T','E']){const dp=derive({...st,person:p});a+=pmark(p,B.X(dp.pctmax),B.Y(dp.lac),p===st.person?6.5:5)}}
+  else a+=`<rect x="${(B.X(D.pctmax)-5).toFixed(1)}" y="${(B.Y(D.lac)-5).toFixed(1)}" width="10" height="10" fill="var(--sa)" stroke="var(--panel)" stroke-width="2"/>`;
   /* VO2max by person */
   a+=`<path class="axl" d="M${C.m.l} ${C.m.t}V${C.m.t+C.h}H${C.m.l+C.w}"/>`;
   for(const v of [0,20,40,60]) a+=`<path class="gl" d="M${C.m.l} ${C.Y(v).toFixed(1)}H${C.m.l+C.w}"/><text class="tk" x="${C.m.l-6}" y="${(C.Y(v)+3.5).toFixed(1)}" text-anchor="end">${v}</text>`;
   a+=`<text class="ax" transform="translate(${C.m.l-36} ${C.m.t+C.h/2}) rotate(-90)" text-anchor="middle">VO₂max (mL/kg/min)</text>`;
   const bw=Math.min(46,C.w/5);
   ['D','T','E'].forEach((p,i)=>{const cx=C.m.l+C.w*(i+0.5)/3, v=PERS[p].mlkg, on=p===st.person;
-    a+=`<rect data-sel="fick" x="${(cx-bw/2).toFixed(1)}" y="${C.Y(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${(C.Y(0)-C.Y(v)).toFixed(1)}" fill="${on?'var(--accent)':'url(#hatchA)'}" fill-opacity="${on?.9:1}" stroke="var(--accent)" stroke-width="1.6" style="cursor:pointer"/><text class="tk" x="${cx.toFixed(1)}" y="${(C.Y(v)-5).toFixed(1)}" text-anchor="middle" style="fill:var(--fg)">${fx(v)}</text><text class="ax" x="${cx.toFixed(1)}" y="${C.m.t+C.h+14}" text-anchor="middle" style="${on?'font-weight:600;fill:var(--fg)':''}">${PERS[p].name}</text>`});
-  a+=tl('fick','VO₂max = CO max × a-vO₂',C.m.l,C.m.t+C.h+32,'start',{fs:11});
+    a+=`<rect data-sel="fick" x="${(cx-bw/2).toFixed(1)}" y="${C.Y(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${(C.Y(0)-C.Y(v)).toFixed(1)}" fill="${on?PC[p]:`url(#hP_${p})`}" fill-opacity="${on?.9:1}" stroke="${PC[p]}" stroke-width="1.8" style="cursor:pointer"/><text class="tk" x="${cx.toFixed(1)}" y="${(C.Y(v)-5).toFixed(1)}" text-anchor="middle" style="fill:var(--fg)">${fx(v)}</text><text class="ax" x="${cx.toFixed(1)}" y="${C.m.t+C.h+14}" text-anchor="middle" style="${on?'font-weight:600;fill:var(--fg)':''}">${PERS[p].name}</text>`+pmark(p,cx,C.m.t+C.h+27,4);});
+  a+=tl('fick','VO₂max = CO max × a-vO₂',C.m.l,C.m.t+C.h+50,'start',{fs:11});
   setSvg(W,H,a);
 }
 
@@ -1171,8 +1201,8 @@ document.addEventListener('click',e=>{
 });
 
 /* ================= interactions ================= */
-$('#chart').addEventListener('click',e=>{const s=e.target.closest('[data-sel]'); if(s) selectIn(s.dataset.sel)});
-$('#chart').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){const t=e.target.closest('[data-sel]'); if(t){e.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true}))}}});
+$('#chart').addEventListener('click',e=>{const qq=e.target.closest('[data-qty]'); if(qq){vq=qq.dataset.qty;redraw();return} const s=e.target.closest('[data-sel]'); if(s) selectIn(s.dataset.sel)});
+$('#chart').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){const t=e.target.closest('[data-sel],[data-qty]'); if(t){e.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true}))}}});
 $('#evl').addEventListener('click',e=>{const r=e.target.closest('tr[data-sel]'); if(r) selectIn(r.dataset.sel)});
 $('#evl').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('tr[data-sel]')){e.preventDefault();e.target.click()}});
 $('#ovMain').addEventListener('click',e=>{
