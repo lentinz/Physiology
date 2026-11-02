@@ -1049,7 +1049,7 @@ function drawFit(W){
 
 /* ----- table under the chart ----- */
 function row(k,label,r,n,unit){return `<tr${k?` data-sel="${k}" tabindex="0"`:''}${sel[tab]===k&&k?' class="cur"':''}><td>${label}</td><td class="r">${r}</td><td>${n}${unit?` <span style="color:var(--mut);font-size:11px">${unit}</span>`:''}</td></tr>`}
-function tbl(head,rows){return `<table><tr><td style="color:var(--mut);font-size:11.5px">${head}</td><td class="r" style="color:var(--mut);font-size:11.5px">At rest</td><td style="color:var(--mut);font-size:11.5px;text-align:right">Now</td></tr>${rows.join('')}</table>`}
+function tbl(head,rows){if(showAll&&['vent','fit'].includes(tab))head+=` · ${PERS[st.person].name} (selected)`;return `<table><tr><td style="color:var(--mut);font-size:11.5px">${head}</td><td class="r" style="color:var(--mut);font-size:11.5px">At rest</td><td style="color:var(--mut);font-size:11.5px;text-align:right">Now</td></tr>${rows.join('')}</table>`}
 function renderEvl(){
   const e=$('#evl'); if(tab==='ov'){e.innerHTML='';return}
   const d=D,r=DR; let h='';
