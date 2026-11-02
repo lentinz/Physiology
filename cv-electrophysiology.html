@@ -11,18 +11,18 @@
 :root{
   --bg:#0d1218; --panel:#141b23; --panel2:#1a232d; --line:#273343; --fg:#e7edf4; --mut:#98a6b6; --faint:#617083;
   --accent:#4cc2ff; --accent-ink:#04141f; --rest:#2b4157; --act:#ff6b5a; --ecg:#6ee7b7; --sa:#ffc15e; --vent:#ff8a70;
-  --iNa:#ffb454; --iCa:#6ee7b7; --iK:#5ec8ff; --iTo:#f2d46b; --iK1:#8aa0b8; --iF:#a99bff; --iAch:#ff8fb1; --force:#4cc2ff; --ca:#ffc15e;
+  --iNa:#ffb454; --iCa:#6ee7b7; --iK:#5ec8ff; --iTo:#f2d46b; --iK1:#8aa0b8; --iF:#a99bff; --iAch:#ff8fb1; --force:#4cc2ff; --ca:#ffc15e; --pD:#f07ac8; --pT:#b9c5d2; --pE:#b4e04f;
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:dark;
 }
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
   --bg:#f1f4f8; --panel:#ffffff; --panel2:#e9eef4; --line:#d3dce7; --fg:#14202b; --mut:#536274; --faint:#8794a4;
   --accent:#0a6cab; --accent-ink:#ffffff; --rest:#cbd7e4; --act:#d9412d; --ecg:#0b8559; --sa:#9a5d00; --vent:#c24026;
-  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; color-scheme:light}}
+  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; --pD:#b0268a; --pT:#3e5063; --pE:#5c8a00; color-scheme:light}}
 :root[data-theme="light"]{
   --bg:#f1f4f8; --panel:#ffffff; --panel2:#e9eef4; --line:#d3dce7; --fg:#14202b; --mut:#536274; --faint:#8794a4;
   --accent:#0a6cab; --accent-ink:#ffffff; --rest:#cbd7e4; --act:#d9412d; --ecg:#0b8559; --sa:#9a5d00; --vent:#c24026;
-  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; color-scheme:light}
+  --iNa:#b8630a; --iCa:#0b8559; --iK:#0a6cab; --iTo:#8a6d00; --iK1:#5d7289; --iF:#5a45d4; --iAch:#c12e6d; --force:#0a6cab; --ca:#9a5d00; --pD:#b0268a; --pT:#3e5063; --pE:#5c8a00; color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--sans);padding-block:12px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:9px;min-height:36px;padding:0 12px;cursor:pointer;touch-action:manipulation}
@@ -152,6 +152,8 @@ button[aria-pressed="true"]#pause{background:var(--accent);color:var(--accent-in
 .pers button{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-height:50px;padding:6px 8px;text-align:left;line-height:1.2}
 .pers button b{font-weight:600;font-size:13.5px}
 .pers button span{font-size:10.5px;color:var(--mut)}
+.pm{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px;background:var(--pc)}
+.pm.D{border-radius:50%;--pc:var(--pD)}.pm.T{--pc:var(--pT)}.pm.E{transform:rotate(45deg) scale(.85);--pc:var(--pE)}
 .cap{font-size:12px;color:var(--mut);margin:6px 0 0}
 .endl{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:-4px}
 body.ov .chips,body.ov #mini,body.ov #ctl,body.ov #concept,body.ov .explain,body.ov #chartCard{display:none}
@@ -425,7 +427,7 @@ const CTV=[
  {k:'ex',label:'Exercise intensity',min:0,max:100,step:1,u:'%'},
 ];
 function buildCtl(){
-  $('#ctl').innerHTML=`<div id="blkPerson"><h3>Person</h3><div class="pers" id="pers">${['D','T','E'].map(p=>`<button type="button" data-p="${p}"><b>${PERS[p].name}</b><span>${PERS[p].desc}</span></button>`).join('')}</div></div>
+  $('#ctl').innerHTML=`<div id="blkPerson"><h3>Person</h3><div class="pers" id="pers">${['D','T','E'].map(p=>`<button type="button" data-p="${p}"><b><i class="pm ${p}"></i>${PERS[p].name}</b><span>${PERS[p].desc}</span></button>`).join('')}</div></div>
   <p class="cap" id="persCap"></p>
   <h3>Scenarios</h3><div class="scn" id="scn"></div>
   <h3>Exercise</h3>
@@ -796,19 +798,31 @@ function drawECG(W){
 function frECG(t){const x=refs.P.X(wrapT(t,S.W));refs.cur.setAttribute('x1',x);refs.cur.setAttribute('x2',x)}
 
 /* ---------- tab: autonomic control ---------- */
-const PSTY={D:{w:2.2,dash:'7 4',col:'var(--iF)',sh:'sq'},T:{w:2.6,dash:'',col:'var(--accent)',sh:'ci'},E:{w:4,dash:'',col:'var(--ecg)',sh:'tr'}};
+const PC={D:'var(--pD)',T:'var(--pT)',E:'var(--pE)'};
+const PLW=p=>p===st.person?3.6:2.2;
+function pmark(p,cx,cy,r=5.5){const s=`fill="${PC[p]}" stroke="var(--panel)" stroke-width="2"`;
+  if(p==='D')return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" ${s}/>`;
+  if(p==='T')return `<rect x="${(cx-r).toFixed(1)}" y="${(cy-r).toFixed(1)}" width="${2*r}" height="${2*r}" ${s}/>`;
+  const q=r*1.4;return `<path d="M${cx.toFixed(1)} ${(cy-q).toFixed(1)}L${(cx+q).toFixed(1)} ${cy.toFixed(1)}L${cx.toFixed(1)} ${(cy+q).toFixed(1)}L${(cx-q).toFixed(1)} ${cy.toFixed(1)}Z" ${s}/>`}
+function pLegend(x,y,W){const lab=W<420?'All three:':'Compare all three:';let s=`<text class="lb s" x="${x}" y="${y+4}" style="font-size:10.5px">${lab}</text>`,xx=x+(W<420?62:96);
+  for(const p of ['D','T','E']){const nm=PERS[p].name,on=p===st.person;s+=`<path d="M${xx} ${y}h20" stroke="${PC[p]}" stroke-width="${on?3.6:2.2}" stroke-linecap="round"/>`+pmark(p,xx+10,y,4)+`<text class="lb" x="${xx+26}" y="${y+4}" style="font-size:11.5px;${on?'font-weight:700':''}">${nm}</text>`;xx+=26+nm.length*6.6+12}
+  return s}
 function drawAut(W){
   const d=D,dr=DR,m={l:48,r:62};
   const hSA=W>=520?124:108, hH=W>=520?170:150;
   let s=`<defs><pattern id="hat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--panel2)"/><path d="M0 0V6" style="stroke:var(--faint);stroke-width:2"/></pattern></defs>`;
   // balance bar
-  const bx=12,bw=W-24,by=26,bh=18, pos=x=>bx+clamp(0.5+x/2,0.02,0.98)*bw;
-  s+=`<text class="lb" x="${bx}" y="14">Vagal (parasympathetic)</text><text class="lb" x="${bx+bw}" y="14" text-anchor="end">Sympathetic</text>`;
+  const LG=showAll?24:0;
+  const bx=12,bw=W-24,by=26+LG,bh=18, pos=x=>bx+clamp(0.5+x/2,0.02,0.98)*bw;
+  if(showAll) s+=pLegend(bx,10,W);
+  s+=`<text class="lb" x="${bx}" y="${14+LG}">Vagal (parasympathetic)</text><text class="lb" x="${bx+bw}" y="${14+LG}" text-anchor="end">Sympathetic</text>`;
   s+=`<rect x="${bx}" y="${by}" width="${bw/2}" height="${bh}" rx="4" style="fill:var(--panel2);stroke:var(--line)"/><rect x="${bx+bw/2}" y="${by}" width="${bw/2}" height="${bh}" rx="4" style="fill:url(#hat);stroke:var(--line)"/>`;
   const mk=(x,hollow)=>`<path d="M${x} ${by+bh+2}l-8 12h16z" style="fill:${hollow?'none':'var(--fg)'};stroke:var(--fg);stroke-width:1.6"/>`;
-  if(showRef&&Math.abs((dr.s-dr.v)-(d.s-d.v))>0.01) s+=mk(pos(dr.s-dr.v),true);
-  s+=mk(pos(d.s-d.v),false);
-  s+=`<text class="lb s" x="${bx}" y="${by+bh+28}" style="fill:var(--fg)">in use: ${fx(d.v*100)}% vagal · ${fx(d.s*100)}% sympathetic${showRef&&Math.abs((dr.s-dr.v)-(d.s-d.v))>0.01?' · hollow marker = at rest':''}</text>`;
+  if(showAll){for(const p of ['D','T','E'])s+=pmark(p,pos((symOf(PERS[p].b)-vagOf(PERS[p].b))/100),by+bh/2,p===st.person?7:5.5)}
+  else{if(showRef&&Math.abs((dr.s-dr.v)-(d.s-d.v))>0.01) s+=mk(pos(dr.s-dr.v),true);
+  s+=mk(pos(d.s-d.v),false)}
+  if(showAll) s+=`<text class="lb s" x="${bx}" y="${by+bh+18}" style="fill:var(--fg)">markers: each person's resting balance</text>`;
+  else s+=`<text class="lb s" x="${bx}" y="${by+bh+28}" style="fill:var(--fg)">in use: ${fx(d.v*100)}% vagal · ${fx(d.s*100)}% sympathetic${showRef&&Math.abs((dr.s-dr.v)-(d.s-d.v))>0.01?' · hollow marker = at rest':''}</text>`;
   const o1=by+bh+40;
   // SA node potential
   const win=Math.max(d.sa.RR+0.05,dr.sa.RR+0.05);
@@ -833,11 +847,10 @@ function drawAut(W){
   const people=showAll?['D','T','E']:[st.person];
   const lab=[];
   for(const p of people){
-    const pts=hrCourse({...st,person:p,ex:0,bal:PERS[p].b,sym:showAll||p!==st.person?symOf(PERS[p].b):st.sym,vag:showAll||p!==st.person?vagOf(PERS[p].b):st.vag},x), y=PSTY[p];
-    s+=`<path class="cv" style="stroke:${y.col};stroke-width:${y.w};${y.dash?`stroke-dasharray:${y.dash}`:''}" d="${pth(pts,P3)}"/>`;
+    const pts=hrCourse({...st,person:p,ex:0,bal:PERS[p].b,sym:showAll||p!==st.person?symOf(PERS[p].b):st.sym,vag:showAll||p!==st.person?vagOf(PERS[p].b):st.vag},x), col=PC[p];
+    s+=`<path class="cv" style="stroke:${col};stroke-width:${showAll?PLW(p):3}" d="${pth(pts,P3)}"/>`;
     const e=pts[pts.length-1], ex_=P3.X(e[0]), ey=P3.Y(e[1]);
-    const mk=y.sh==='sq'?`<rect x="${ex_-4.5}" y="${ey-4.5}" width="9" height="9" style="fill:${y.col}"/>`:y.sh==='tr'?`<path d="M${ex_} ${ey-6}l6 11h-12z" style="fill:${y.col}"/>`:`<circle cx="${ex_}" cy="${ey}" r="5" style="fill:${y.col}"/>`;
-    s+=mk; lab.push({y:ey,t:PERS[p].name,col:y.col});
+    s+=pmark(p,ex_,ey,showAll&&p!==st.person?5:6); lab.push({y:ey,t:PERS[p].name,col});
   }
   lab.sort((a,b)=>a.y-b.y); for(let i=1;i<lab.length;i++) if(lab[i].y-lab[i-1].y<13) lab[i].y=lab[i-1].y+13;
   for(const l of lab) s+=`<text class="lb" x="${P3.m.l+P3.w+9}" y="${(l.y+4).toFixed(1)}" style="fill:${l.col}">${l.t}</text>`;

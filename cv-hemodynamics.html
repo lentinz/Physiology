@@ -12,18 +12,18 @@
 :root{
   --bg:#0d1218; --panel:#141b23; --panel2:#1a232d; --line:#273343; --fg:#e7edf4; --mut:#98a6b6; --faint:#617083;
   --accent:#4cc2ff; --accent-ink:#04141f; --pres:#ff8a70; --vol:#4cc2ff; --ao:#ffc15e; --ecg:#6ee7b7; --ven:#a99bff; --art:#ff7088; --edp:#8fd694;
-  --co:#4cc2ff; --svc:#ffb454; --red:#ff6b6b; --blue:#5aa2ff;
+  --co:#4cc2ff; --svc:#ffb454; --red:#ff6b6b; --blue:#5aa2ff; --pD:#f07ac8; --pT:#b9c5d2; --pE:#b4e04f;
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:dark;
 }
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
   --bg:#f1f4f8; --panel:#ffffff; --panel2:#e9eef4; --line:#d3dce7; --fg:#14202b; --mut:#536274; --faint:#8794a4;
   --accent:#0a6cab; --accent-ink:#ffffff; --pres:#c24026; --vol:#0a6cab; --ao:#9a5d00; --ecg:#0b8559; --ven:#5a45d4; --art:#c12e4d; --edp:#2f8a3f;
-  --co:#0a6cab; --svc:#b45f00; --red:#c92a2a; --blue:#1f6fd1; color-scheme:light}}
+  --co:#0a6cab; --svc:#b45f00; --red:#c92a2a; --blue:#1f6fd1; --pD:#b0268a; --pT:#3e5063; --pE:#5c8a00; color-scheme:light}}
 :root[data-theme="light"]{
   --bg:#f1f4f8; --panel:#ffffff; --panel2:#e9eef4; --line:#d3dce7; --fg:#14202b; --mut:#536274; --faint:#8794a4;
   --accent:#0a6cab; --accent-ink:#ffffff; --pres:#c24026; --vol:#0a6cab; --ao:#9a5d00; --ecg:#0b8559; --ven:#5a45d4; --art:#c12e4d; --edp:#2f8a3f;
-  --co:#0a6cab; --svc:#b45f00; --red:#c92a2a; --blue:#1f6fd1; color-scheme:light}
+  --co:#0a6cab; --svc:#b45f00; --red:#c92a2a; --blue:#1f6fd1; --pD:#b0268a; --pT:#3e5063; --pE:#5c8a00; color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--sans);padding-block:12px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:9px;min-height:36px;padding:0 12px;cursor:pointer;touch-action:manipulation}
@@ -109,6 +109,9 @@ b.n{font:500 13px var(--mono);white-space:nowrap}
 .pers button{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-height:50px;padding:6px 8px;text-align:left;line-height:1.2}
 .pers button b{font-weight:600;font-size:13.5px}
 .pers button span{font-size:10.5px;color:var(--mut)}
+.pm{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px;background:var(--pc)}
+.pm.D{border-radius:50%;--pc:var(--pD)}.pm.T{--pc:var(--pT)}.pm.E{transform:rotate(45deg) scale(.85);--pc:var(--pE)}
+.qty{cursor:pointer}
 .cmp{display:flex;flex-direction:column;gap:5px}
 .cmp button{text-align:left;min-height:32px;font-size:12.5px;padding:6px 10px;line-height:1.25}
 .cap{font-size:12px;color:var(--mut);margin:6px 0 0}
@@ -199,6 +202,7 @@ svg text{font-family:var(--sans)}
       <div class="chartwrap"><svg id="chart" role="img" aria-label="Interactive chart"></svg></div>
       <div class="chartfoot">
         <label class="chk" id="refWrap"><input type="checkbox" id="showRef" checked> <span>Show dashed comparison</span></label>
+        <label class="chk" id="allWrap"><input type="checkbox" id="showAll"> <span>Compare all three people</span></label>
         <label class="chk" id="detWrap"><input type="checkbox" id="showDet"> <span>Show details</span></label>
         <span class="sp"></span>
         <span id="spdWrap" style="display:inline-flex;gap:6px;align-items:center">
@@ -392,6 +396,22 @@ const restFor=p=>({...REST,person:p,HR:PERSON[p].HR0});
 let st=restFor('T'), cmpMode='typ', showRef=true, details=false, speed=0.5, paused=false, clock=0, sceneNote='rest', last='intro';
 let tab='ov', circSel=null, cycSel=null, vtSel=null, activeObj=null, conceptOpen=LS.get('cvA2_concept')!=='0', termOpen=null;
 let cur, ref, base, typ, BM, BR;
+let showAll=false, hrq='co';
+const CMPTABS=['pv','fs','hr'];
+const SA=()=>showAll&&CMPTABS.includes(tab);
+const PC={D:'var(--pD)',T:'var(--pT)',E:'var(--pE)'};
+const PLW=p=>p===st.person?3.6:2.2;
+function spFor(p){return solve({...st,person:p,HR:clampv(st.HR-PERSON[st.person].HR0+PERSON[p].HR0,30,225)})}
+function pmark(p,cx,cy,r=5.5){const s=`fill="${PC[p]}" stroke="var(--panel)" stroke-width="2"`;
+  if(p==='D')return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" ${s}/>`;
+  if(p==='T')return `<rect x="${(cx-r).toFixed(1)}" y="${(cy-r).toFixed(1)}" width="${2*r}" height="${2*r}" ${s}/>`;
+  const q=r*1.4;return `<path d="M${cx.toFixed(1)} ${(cy-q).toFixed(1)}L${(cx+q).toFixed(1)} ${cy.toFixed(1)}L${cx.toFixed(1)} ${(cy+q).toFixed(1)}L${(cx-q).toFixed(1)} ${cy.toFixed(1)}Z" ${s}/>`}
+function pLegend(x,y,W){let s='',xx=x;const lab=W<420?'All three:':'Compare all three:';
+  s+=`<text class="lb s" x="${x}" y="${y+4}" style="font-size:10.5px">${lab}</text>`;xx=x+(W<420?62:96);
+  for(const p of ['D','T','E']){const nm=PN[p],on=p===st.person;s+=`<path d="M${xx} ${y}h20" stroke="${PC[p]}" stroke-width="${on?3.6:2.2}" stroke-linecap="round"/>`+pmark(p,xx+10,y,4)+`<text class="lb" x="${xx+26}" y="${y+4}" style="font-size:11.5px;${on?'font-weight:700':''}">${nm}</text>`;xx+=26+nm.length*6.6+12}
+  return s}
+function spreadY(items,gap){const it=items.slice().sort((p,q)=>p.y-q.y);for(let i=1;i<it.length;i++)if(it[i].y-it[i-1].y<gap)it[i].y=it[i-1].y+gap;return it}
+function endLabels(xr,ys){return spreadY(['D','T','E'].map(p=>({p,y:ys[p]-6})),13).map(o=>`<text class="lb" x="${xr}" y="${o.y.toFixed(1)}" text-anchor="end" style="font-size:11px;font-weight:600;fill:${PC[o.p]}">${PN[o.p]}</text>`).join('')}
 const PN={D:'Drew',T:'Taylor',E:'Elliot'}, PS={D:'deconditioned',T:'typical',E:'endurance-trained'};
 const clampv=(x,a,b)=>Math.min(b,Math.max(a,x));
 function ghostSt(){
@@ -431,7 +451,7 @@ const SCN=[
 SCN.push(['hot','Hot environment',{heat:60,baro:1}]);
 const SCN_TAB={vt:['rest','end','lift','standbaro','hot'],circ:['rest','ex50','ex100','stand','standmp','breath'],pv:['rest','ex50','ex100','stand'],cyc:['rest','ex50','ex100'],fs:['rest','stand','standmp','breath','ex50'],hr:['rest','ex50','ex100']};
 function buildCtl(){
-  let h=`<h3>Person</h3><div class="pers" id="pers">${['D','T','E'].map(p=>`<button type="button" data-p="${p}"><b>${PN[p]}</b><span>${PS[p]}</span></button>`).join('')}</div>
+  let h=`<h3>Person</h3><div class="pers" id="pers">${['D','T','E'].map(p=>`<button type="button" data-p="${p}"><b><i class="pm ${p}"></i>${PN[p]}</b><span>${PS[p]}</span></button>`).join('')}</div>
   <h3>Dashed line shows</h3><div class="cmp" id="cmp"><button type="button" data-m="typ">Typical person, same activity</button><button type="button" data-m="rest">This person at rest</button></div><p class="cap" id="cmpcap"></p>
   <h3>Scenarios</h3><div class="scn" id="scn"></div>`;
   let g='';
@@ -766,6 +786,14 @@ function drawOv(W){
 /* ---------------- tab: PV loop ---------------- */
 function loopPts(B,n=160){const pts=[];for(let i=0;i<=n;i++){const q=B.at(i/n*B.T);pts.push([q.V,q.P])}return pts}
 function drawPV(W){
+  if(SA()){
+    const H=Math.round(Math.min(Math.max(W*0.68,300),520)), sp={D:spFor('D'),T:spFor('T'),E:spFor('E')};
+    const ymax=Math.max(160,niceMax(Math.max(...['D','T','E'].map(p=>sp[p].Psys))+15,20));
+    const P=PL(W,H,{l:44,r:14,t:36,b:36},[0,220],[0,ymax]);
+    let s=pLegend(P.m.l,14,W)+axes(P,ticks(0,200,50),ticks(0,ymax,ymax>200?50:40),'Left ventricular volume (mL)','Pressure (mmHg)');
+    const order=['D','T','E'].sort((a,b)=>(a===st.person)-(b===st.person));
+    for(const p of order){const on=p===st.person;s+=`<path d="${pth(loopPts(beatModel(sp[p])),P)}Z" style="fill:${on?`color-mix(in srgb,${PC[p]} 14%,transparent)`:'none'};stroke:${PC[p]};stroke-width:${PLW(p)};stroke-linejoin:round"/>`}
+    refs={P,dot:null};setSvg(W,H,s);return}
   const H=Math.round(Math.min(Math.max(W*0.68,300),520));
   const ymax=Math.max(160,niceMax(Math.max(cur.Psys,showRef?ref.Psys:0)+15,20));
   const P=PL(W,H,{l:44,r:14,t:12,b:36},[0,220],[0,ymax]);
@@ -801,7 +829,7 @@ function drawPV(W){
   refs={P};
   setSvg(W,H,s); refs.dot=$('#pvdot');
 }
-function frPV(t){const q=BM.at(t);refs.dot.setAttribute('cx',refs.P.X(q.V).toFixed(1));refs.dot.setAttribute('cy',refs.P.Y(q.P).toFixed(1))}
+function frPV(t){if(!refs.dot)return;const q=BM.at(t);refs.dot.setAttribute('cx',refs.P.X(q.V).toFixed(1));refs.dot.setAttribute('cy',refs.P.Y(q.P).toFixed(1))}
 
 /* ---------------- tab: cardiac cycle ---------------- */
 const PHN=['Isovolumic contraction','Ejection','Isovolumic relaxation','Filling (diastole)'];
@@ -872,6 +900,18 @@ function svCurve(r,P){
   return a;
 }
 function drawFS(W){
+  if(SA()){
+    const H=Math.round(Math.min(Math.max(W*0.66,300),520)), sp={D:spFor('D'),T:spFor('T'),E:spFor('E')};
+    const cs={};for(const p of ['D','T','E'])cs[p]=svCurve(sp[p],30);
+    const top=Math.max(...['D','T','E'].map(p=>Math.max(...cs[p].map(q=>q[1]))));
+    const P=PL(W,H,{l:44,r:16,t:36,b:38},[0,30],[0,niceMax(top*1.04,20)]);
+    let s=pLegend(P.m.l,14,W)+axes(P,ticks(0,30,5),ticks(0,P.yr[1],P.yr[1]>160?40:20),'Preload: ventricular filling pressure (mmHg)','Stroke volume (mL)');
+    for(const p of ['D','T','E'])s+=`<path class="cv" style="stroke:${PC[p]};stroke-width:${PLW(p)}" d="${pth(cs[p].map(q=>[q[0],q[1]]),P)}"/>`;
+    const ys={};for(const p of ['D','T','E'])ys[p]=P.Y(cs[p][cs[p].length-1][1]);
+    s+=endLabels(P.X(30)-6,ys);
+    for(const p of ['D','T','E'])s+=pmark(p,P.X(sp[p].Pfill),P.Y(sp[p].SV),p===st.person?6.5:5);
+    s+=`<text class="lb s" x="${P.m.l+P.w-4}" y="${P.m.t+P.h-8}" text-anchor="end">markers: where each person is now</text>`;
+    setSvg(W,H,s);return}
   const H=Math.round(Math.min(Math.max(W*0.66,300),500));
   const cr=svCurve(cur,30), rr=svCurve(ref,30);
   const top=Math.max(...cr.map(p=>p[1]),...(showRef?rr.map(p=>p[1]):[0]));
@@ -889,6 +929,20 @@ function drawFS(W){
 
 /* ---------------- tab: HR and output ---------------- */
 function drawHR(W){
+  if(SA()){
+    const H=Math.round(Math.min(Math.max(W*0.66,300),520)), sp={D:spFor('D'),T:spFor('T'),E:spFor('E')}, ix=hrq==='co'?1:2;
+    const cs={};for(const p of ['D','T','E']){cs[p]=[];for(let h=40;h<=225;h+=5){const r=hemo({...sp[p].e,HR:h});cs[p].push([h,ix===1?r.CO:r.SV])}}
+    const mx=niceMax(Math.max(...['D','T','E'].map(p=>Math.max(...cs[p].map(q=>q[1]))))*1.12,ix===1?2:20);
+    const P=PL(W,H,{l:44,r:16,t:62,b:38},[40,225],[0,mx]);
+    let s=pLegend(P.m.l,14,W);
+    s+=['co','sv'].map((k,i)=>{const x=P.m.l+i*(W<420?112:128),w=W<420?106:122,on=hrq===k;return `<g class="qty" data-qty="${k}" tabindex="0" role="button" aria-label="Show ${k==='co'?'cardiac output':'stroke volume'}"><rect x="${x}" y="28" width="${w}" height="22" rx="11" style="fill:${on?'color-mix(in srgb,var(--accent) 18%,var(--panel2))':'var(--panel2)'};stroke:${on?'var(--accent)':'var(--line)'};stroke-width:${on?2:1}"/><text class="lb s" x="${x+w/2}" y="43" text-anchor="middle" style="font-size:11px;${on?'font-weight:700':''}">${k==='co'?'Cardiac output':'Stroke volume'}</text></g>`}).join('');
+    s+=axes(P,ticks(40,220,20),ticks(0,mx,ix===1?(mx>12?4:2):(mx>100?40:20)),'Heart rate (bpm), all other settings held',ix===1?'Cardiac output (L/min)':'Stroke volume (mL)');
+    for(const p of ['D','T','E'])s+=`<path class="cv" style="stroke:${PC[p]};stroke-width:${PLW(p)}" d="${pth(cs[p],P)}"/>`;
+    const ys={};for(const p of ['D','T','E'])ys[p]=P.Y(cs[p][cs[p].length-1][1]);
+    s+=endLabels(P.X(225)-6,ys);
+    for(const p of ['D','T','E'])s+=pmark(p,P.X(sp[p].HR),P.Y(ix===1?sp[p].CO:sp[p].SV),p===st.person?6.5:5);
+    s+=`<text class="lb s" x="${P.m.l+P.w-4}" y="${P.m.t+P.h-8}" text-anchor="end">markers: where each person is now</text>`;
+    setSvg(W,H,s);return}
   const H=Math.round(Math.min(Math.max(W*0.66,300),500));
   const e=cur.e, pts=[], rpts=[];
   for(let h=40;h<=225;h+=5){const r=hemo({...e,HR:h});pts.push([h,r.CO,r.SV]);if(showRef){const q=hemo({...ref.e,HR:h});rpts.push([h,q.CO,q.SV])}}
@@ -1141,9 +1195,10 @@ function redraw(){
   const W=Math.max(300,Math.floor($('.chartwrap').clientWidth-16));
   T[2](W);
   document.body.classList.toggle('t-vt',tab==='vt');
-  $('#spdWrap').style.visibility=ANIM[tab]?'visible':'hidden';
+  $('#spdWrap').style.visibility=ANIM[tab]&&!SA()?'visible':'hidden';
+  $('#allWrap').style.display=CMPTABS.includes(tab)?'':'none';
   $('#detWrap').style.display=['pv','cyc','fs','hr','vt'].includes(tab)?'':'none';
-  $('#refWrap').style.display=['circ'].includes(tab)?'none':'';
+  $('#refWrap').style.display=(['circ'].includes(tab)||SA())?'none':'';
   const c=$('#chart'); if(c) c.setAttribute('aria-label',T[1]+' chart');
 }
 function update(){
@@ -1160,6 +1215,7 @@ function loop(now){
 }
 /* chart clicks (circulation boxes, cycle traces) */
 function chartClick(e){
+  const qy=e.target.closest('[data-qty]');if(qy){hrq=qy.dataset.qty;redraw();return}
   const back=e.target.closest('[data-back]');
   if(back){circSel=null;renderConcept();redraw();return}
   const b=e.target.closest('[data-b]');
@@ -1169,7 +1225,7 @@ function chartClick(e){
   const c=e.target.closest('[data-c]');
   if(c&&tab==='cyc'){cycSel=cycSel===c.dataset.c?null:c.dataset.c; if(cycSel)openConcept(); renderConcept(); redraw(); return}
 }
-function chartKey(e){ if(e.key==='Enter'||e.key===' '){ if(e.target.closest&&e.target.closest('[data-b],[data-c],[data-v],[data-back]')){e.preventDefault();chartClick(e)} } }
+function chartKey(e){ if(e.key==='Enter'||e.key===' '){ if(e.target.closest&&e.target.closest('[data-b],[data-c],[data-v],[data-back],[data-qty]')){e.preventDefault();chartClick(e)} } }
 
 /* ---------------- objectives ---------------- */
 const OBJ=[
@@ -1184,7 +1240,7 @@ const OBJ=[
  {g:'Vessels & BP',t:'Explain why systolic pressure rises far less than cardiac output during endurance exercise',tab:'vt',scn:'end',try:'Vessels & BP tab, Taylor, Endurance exercise. Compare how many times higher output is than rest with how much systolic pressure rises. Use BP = CO × TPR and the resistance card. What does diastolic pressure do, and why?'},
  {g:'Vessels & BP',t:'Contrast the blood pressure response to a heavy lift with endurance exercise',tab:'vt',scn:'lift',try:'Vessels & BP tab, Heavy lift. Which changes, output or resistance? Compare systolic and diastolic with Endurance exercise. Why is this a short-lived peak, and what would you coach (exhale during the effort, avoid prolonged gripping)?'},
  {g:'Vessels & BP',t:'Explain what causes vasoconstriction and vasodilation, and how arteriolar tone changes resistance (TPR) and blood pressure',tab:'vt',scn:'end',try:'Vessels & BP tab, Taylor, Endurance exercise. Which beds dilate and which constrict, and what signal causes each? Using R ∝ 1/r⁴ and the beds in parallel, explain why total resistance falls. Then use the cause sliders one at a time (sympathetic nerves, muscle metabolites, angiotensin II, body heat) and predict what each does to resistance, diastolic pressure and the share of output going to muscle.'},
- {g:'Compare the three people',t:'Compare cardiovascular responses to exercise in people with different fitness',tab:'circ',person:'E',scn:'ex100',try:'Run Maximal exercise for Drew, Taylor and Elliot (the dashed line is Taylor doing the same thing). Compare HR, SV and CO. Why do their maximal heart rates match while their maximal outputs differ? Then compare their resting HR, SV and blood pressure.'},
+ {g:'Compare the three people',t:'Compare cardiovascular responses to exercise in people with different fitness',tab:'hr',person:'E',scn:'ex100',try:'Run Maximal exercise, then tick Compare all three people on the HR & output tab (switch between cardiac output and stroke volume). Compare HR, SV and CO. Try the same on the Frank-Starling and PV loop tabs. Why do their maximal heart rates match while their maximal outputs differ? Then compare their resting HR, SV and blood pressure.'},
 ];
 function getDone(){return new Set((LS.get('cvA2_obj')||'').split(',').filter(Boolean).map(Number))}
 function setDone(set){LS.set('cvA2_obj',[...set].join(','))}
@@ -1232,6 +1288,7 @@ document.body.classList.add('ov');
 buildCtl(); buildChips(); buildSheets(); buildOverview(); buildScn(); buildTabs();
 details=LS.get('cvA2_det')==='1'; $('#showDet').checked=details;
 $('#showRef').onchange=e=>{showRef=e.target.checked;redraw()};
+$('#showAll').onchange=e=>{showAll=e.target.checked;redraw()};
 $('#showDet').onchange=e=>{details=e.target.checked;LS.set('cvA2_det',details?'1':'0');redraw()};
 $('#chart').parentNode.addEventListener('click',chartClick); $('.chartwrap').addEventListener('keydown',chartKey);
 $('#spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.v;for(const x of $('#spd').children){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b)}};
@@ -1244,6 +1301,4 @@ requestAnimationFrame(loop);
 window.__cv={st:()=>st,cur:()=>cur,ref:()=>ref,setTab,applyScn,setP:o=>{st={...st,...o};sceneNote=null;last=Object.keys(o)[0];update()},setPerson,sel:b=>{circSel=b;renderConcept();redraw()},cyc:c=>{cycSel=c;renderConcept();redraw()},vt:c=>{vtSel=c;renderConcept();redraw()},obj:setupObj,term:k=>{termOpen=k;syncTerms()}};
 })();
 </script>
-
-
 </body></html>
