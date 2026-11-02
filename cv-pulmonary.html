@@ -604,6 +604,17 @@ const diffRef=()=>showRef&&(Math.abs(D.VE-DG.VE)+Math.abs(D.TV-DG.TV)+Math.abs(D
 const niceTicks=(lo,hi,n=4)=>{const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/mag,s=(f<1.5?1:f<3.5?2:f<7.5?5:10)*mag;const r=[];for(let v=Math.ceil(lo/s)*s;v<=hi+1e-9;v+=s)r.push(+v.toFixed(6));return r};
 
 /* ----- airways and breathing ----- */
+const DIA_C=vf=>236-26*(1-Math.min(1,vf*1.3));
+const domeY=(x,C)=>{const t=(x-60)/180;return 244-2*t*(1-t)*(244-C)};
+function lungsD(C){
+  const pts=[];for(let x=72;x<=146;x+=7)pts.push([x,domeY(x,C)-3]);pts.push([146,domeY(146,C)-3]);
+  const L=pts.map(p=>`L${p[0]} ${p[1].toFixed(1)}`).join(''), R=pts.map(p=>`L${300-p[0]} ${p[1].toFixed(1)}`).join('');
+  return `M146 80 C116 72 74 96 67 150 C65 188 66 214 72 ${(domeY(72,C)-3).toFixed(1)}${L}Z M154 80 C184 72 226 96 233 150 C235 188 234 214 228 ${(domeY(72,C)-3).toFixed(1)}${R}Z`;
+}
+const airSy=vf=>{const b=v=>domeY(150,DIA_C(v))-6-92;return b(vf)/b(0.5)};
+const AIR_TREE=[[150,92,124,118,6],[124,118,100,128,4.2],[124,118,116,158,4.2],[100,128,84,122,2.6],[100,128,88,146,2.6],[100,128,96,108,2.6],[116,158,98,172,2.6],[116,158,112,190,2.6],[116,158,126,196,2.6]];
+const AIR_ENDS=[[84,122],[88,146],[96,108],[98,172],[112,190],[126,196]];
+const AIR_DIR=[[-1,-.2],[-1,.4],[-.3,-1],[-1,.5],[0,1],[.7,.7]];
 function drawAir(W){
   const wide=W>=640, dw=wide?Math.min(400,Math.round(W*0.44)):W;
   const s=Math.min(1,(dw-148)/300), tx=4, ty=10, dh=Math.round(300*s)+16;
@@ -619,20 +630,24 @@ function drawAir(W){
   const tk=win>11?[0,2,4,6,8,10,12].filter(v=>v<=win+0.01):[0,2,4,6,8,10].filter(v=>v<=win+0.01);
   let a=hatch;
   /* diagram */
-  const ends=[],lines=[];
-  (function tree(x,y,ang,len,w,dep){const x2=x+len*Math.sin(ang),y2=y+len*Math.cos(ang);lines.push([x,y,x2,y2,w]);if(!dep){ends.push([x2,y2]);return}tree(x2,y2,ang-0.46,len*0.76,w*0.74,dep-1);tree(x2,y2,ang+0.46,len*0.76,w*0.74,dep-1)})(150,92,-0.72,40,6,3);
-  (function tree(x,y,ang,len,w,dep){const x2=x+len*Math.sin(ang),y2=y+len*Math.cos(ang);lines.push([x,y,x2,y2,w]);if(!dep){ends.push([x2,y2]);return}tree(x2,y2,ang-0.46,len*0.76,w*0.74,dep-1);tree(x2,y2,ang+0.46,len*0.76,w*0.74,dep-1)})(150,92,0.72,40,6,3);
-  const czSel=isSel('cz'),rzSel=isSel('rz');
+  const czSel=isSel('cz'),rzSel=isSel('rz'), v0=0.2, C0=DIA_C(v0);
+  const mir=l=>[300-l[0],l[1],300-l[2],l[3],l[4]];
+  const tree=AIR_TREE.concat(AIR_TREE.map(mir));
   a+=`<g transform="translate(${tx} ${ty}) scale(${s})">`;
   a+=`<g id="ribG" data-sel="ribs" style="cursor:pointer"><path d="M72 46 Q28 58 28 150 Q28 232 78 254 L222 254 Q272 232 272 150 Q272 58 228 46" fill="none" stroke="var(--faint)" stroke-width="6" stroke-linecap="round" style="${stS('ribs')}"/>${[88,122,156,190].map(y=>`<path d="M36 ${y} Q150 ${y-26} 264 ${y}" fill="none" stroke="var(--line)" stroke-width="2"/>`).join('')}</g>`;
-  a+=`<g id="lungG" data-sel="pleura" style="cursor:pointer"><path d="M142 80 C110 72 72 95 66 150 C62 200 82 236 142 238 Z M158 80 C190 72 228 95 234 150 C238 200 218 236 158 238 Z" id="lungP" fill="var(--accent)" fill-opacity=".12" stroke="var(--sa)" stroke-width="2.2" style="${isSel('pleura')?'stroke-width:4;':''}"/></g>`;
-  a+=`<g data-sel="cz" style="cursor:pointer"><rect x="140" y="4" width="20" height="26" rx="9" fill="none" stroke="var(--accent)" stroke-width="${czSel?5:3}" data-sel="upper"/><line x1="150" y1="30" x2="150" y2="92" stroke="var(--accent)" stroke-width="${isSel('trach')||czSel?11:9}" stroke-linecap="round" data-sel="trach" style="opacity:.9"/>${lines.map(l=>`<line x1="${l[0].toFixed(1)}" y1="${l[1].toFixed(1)}" x2="${l[2].toFixed(1)}" y2="${l[3].toFixed(1)}" stroke="var(--accent)" stroke-width="${(l[4]*(isSel('bronch')||czSel?1.5:1)).toFixed(1)}" stroke-linecap="round" data-sel="bronch"/>`).join('')}</g>`;
-  a+=`<g data-sel="rz" style="cursor:pointer">${ends.map(e=>[[-4,2],[3,4],[0,-4]].map(o=>`<circle cx="${(e[0]+o[0]).toFixed(1)}" cy="${(e[1]+o[1]+3).toFixed(1)}" r="${rzSel?4.6:3.6}" fill="var(--ecg)" fill-opacity=".75" stroke="var(--ecg)" stroke-width="1"/>`).join('')).join('')}</g>`;
-  a+=`<path id="dia" data-sel="dia" d="M60 244 Q150 218 240 244" fill="none" stroke="var(--vent)" stroke-width="${isSel('dia')?8:5.5}" stroke-linecap="round" style="cursor:pointer"/>`;
+  a+=`<g data-sel="cz" style="cursor:pointer"><rect x="140" y="4" width="20" height="26" rx="9" fill="none" stroke="var(--accent)" stroke-width="${czSel?5:3}" data-sel="upper"/><line x1="150" y1="30" x2="150" y2="92" stroke="var(--accent)" stroke-width="${isSel('trach')||czSel?11:9}" stroke-linecap="round" data-sel="trach" style="opacity:.9"/></g>`;
+  a+=`<g id="lungG" transform="translate(150 0) scale(${(0.94+0.12*v0).toFixed(4)} 1) translate(-150 0)">`;
+  a+=`<g data-sel="pleura" style="cursor:pointer"><path id="lungP" d="${lungsD(C0)}" fill="var(--accent)" fill-opacity="${(0.08+0.2*v0).toFixed(3)}" stroke="var(--sa)" stroke-width="${isSel('pleura')?4:2.2}" stroke-linejoin="round"/></g>`;
+  a+=`<g id="airG" transform="translate(0 92) scale(1 ${airSy(v0).toFixed(4)}) translate(0 -92)">`;
+  a+=`<g data-sel="cz" style="cursor:pointer">${tree.map(l=>`<line x1="${l[0]}" y1="${l[1]}" x2="${l[2]}" y2="${l[3]}" stroke="var(--accent)" stroke-width="${(l[4]*(isSel('bronch')||czSel?1.4:1)).toFixed(1)}" stroke-linecap="round" data-sel="bronch"/>`).join('')}</g>`;
+  const alv=[];AIR_ENDS.forEach((e,i)=>{[e,[300-e[0],e[1]]].forEach((p,sd)=>{const d=AIR_DIR[i],dx=sd?-d[0]:d[0],n=Math.hypot(d[0],d[1])||1,cx=p[0]+dx/n*7,cy=p[1]+d[1]/n*7;alv.push([cx,cy])})});
+  a+=`<g data-sel="rz" style="cursor:pointer">${alv.map(c=>`<g class="alv" data-cx="${c[0].toFixed(1)}" data-cy="${c[1].toFixed(1)}">${[[-4.2,1.8],[3.6,2.6],[0,-4.4]].map(o=>`<circle cx="${(c[0]+o[0]).toFixed(1)}" cy="${(c[1]+o[1]).toFixed(1)}" r="${rzSel?5:4.2}" fill="var(--ecg)" fill-opacity=".75" stroke="var(--ecg)" stroke-width="1"/>`).join('')}</g>`).join('')}</g>`;
+  a+='</g></g>';
+  a+=`<path id="dia" data-sel="dia" d="M60 244 Q150 ${C0.toFixed(1)} 240 244" fill="none" stroke="var(--vent)" stroke-width="${isSel('dia')?8:5.5}" stroke-linecap="round" style="cursor:pointer"/>`;
   a+=`<g id="fin" opacity="0" fill="none" stroke="var(--fg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M143 44L150 54L157 44"/><path d="M143 14L150 24L157 14" transform="translate(0 -4)"/></g><g id="fout" opacity="0" fill="none" stroke="var(--fg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M143 54L150 44L157 54"/><path d="M143 24L150 14L157 24" transform="translate(0 -4)"/></g>`;
   a+='</g>';
   /* diagram labels */
-  const lx=tx+300*s+14, tgt=[['upper','Upper airways',150,16],['trach','Trachea',150,62],['ribs','Rib cage',270,110],['bronch','Bronchi',188,128],['cz','Conducting zone',196,164],['pleura','Pleural space',236,176],['rz','Respiratory zone',210,205],['dia','Diaphragm',226,232]];
+  const lx=tx+300*s+14, tgt=[['upper','Upper airways',150,16],['trach','Trachea',150,62],['ribs','Rib cage',270,110],['bronch','Bronchi',165,106],['cz','Conducting zone',187,128],['pleura','Pleural space',234,165],['rz','Respiratory zone',208,176],['dia','Diaphragm',226,232]];
   const gap=Math.min(36,(dh-24)/tgt.length);
   tgt.forEach((t,i)=>{const ly=ty+14+i*gap+8;a+=`<path d="M${lx-3} ${ly-4}L${X(t[2]).toFixed(1)} ${Y(t[3]).toFixed(1)}" stroke="var(--faint)" stroke-width="1" fill="none"/>`+tl(t[0],t[1],lx,ly,'start',{fs:11.5})});
   /* volume panel */
@@ -654,14 +669,19 @@ function drawAir(W){
   a+=tl('plp','Intrapleural',P2.X(win*0.995),P2.Y(mn)+14,'end',{fs:11,col:'var(--iF)'});
   a+=`<line id="cur2" x1="${P2.X(0)}" x2="${P2.X(0)}" y1="${P2.m.t}" y2="${P2.m.t+h2}" stroke="var(--act)" stroke-width="1.2" stroke-dasharray="3 3"/><circle id="dot2a" r="4.4" fill="var(--accent)" stroke="var(--panel)" stroke-width="1.5" cx="${P2.X(0)}" cy="${P2.Y(0)}"/><circle id="dot2b" r="4.4" fill="var(--iF)" stroke="var(--panel)" stroke-width="1.5" cx="${P2.X(0)}" cy="${P2.Y(0)}"/>`;
   setSvg(W,H,a);
+  refs.air.alv=[...document.querySelectorAll('#airG .alv')];
 }
 function frAir(t){
   const R=refs.air; if(!R||!gid('ribG')) return;
   const b=breath(D,t), vf=(b.V-RV)/(TLC-RV), xw=t%R.win;
   gid('ribG').setAttribute('transform',`translate(150 250) scale(${(0.985+0.05*vf).toFixed(4)} ${(0.985+0.04*vf).toFixed(4)}) translate(-150 -250)`);
-  gid('lungG').setAttribute('transform',`translate(150 238) scale(${(0.9+0.2*vf).toFixed(4)} ${(0.9+0.2*vf).toFixed(4)}) translate(-150 -238)`);
+  const wf=0.94+0.12*vf, C=DIA_C(vf);
+  gid('lungG').setAttribute('transform',`translate(150 0) scale(${wf.toFixed(4)} 1) translate(-150 0)`);
+  gid('lungP').setAttribute('d',lungsD(C));
+  gid('airG').setAttribute('transform',`translate(0 92) scale(1 ${airSy(vf).toFixed(4)}) translate(0 -92)`);
+  const ak=0.8+0.4*vf; for(const g of R.alv) g.setAttribute('transform',`translate(${g.dataset.cx} ${g.dataset.cy}) scale(${ak.toFixed(3)}) translate(${-g.dataset.cx} ${-g.dataset.cy})`);
   gid('lungP').setAttribute('fill-opacity',(0.08+0.2*vf).toFixed(3));
-  gid('dia').setAttribute('d',`M60 244 Q150 ${(236-26*(1-Math.min(1,vf*1.3))).toFixed(1)} 240 244`);
+  gid('dia').setAttribute('d',`M60 244 Q150 ${C.toFixed(1)} 240 244`);
   const fm=clamp(Math.abs(b.fl)/(0.35),0,1);
   gid('fin').setAttribute('opacity',b.fl>0.02?(0.25+0.75*fm).toFixed(2):0);
   gid('fout').setAttribute('opacity',b.fl<-0.02?(0.25+0.75*fm).toFixed(2):0);
