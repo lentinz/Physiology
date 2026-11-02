@@ -261,7 +261,7 @@ body.ov .main{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage"}
     <li>Dead space is set to a typical 150 mL per breath (see sources). It is not given on the lecture slides.</li>
     <li>Control of breathing follows the lecture: a fast rise from central command and joint and muscle input at the start of exercise, then a slower rise as the chemical signals build. The split between the two is illustrative.</li>
     <li>Gas exchange uses the alveolar gas equation. The oxyhemoglobin curve uses a published equation for hemoglobin saturation (see sources). Pressure at elevation comes from the barometric formula, and inspired PO₂ = FiO₂ × (PB − 47), the formula on the environmental considerations slides.</li>
-    <li>Elevation: acclimatization, altitude illness and how altitude limits performance are covered in the environmental considerations lecture and are not modeled here. Each workload stays at the same percent of the person's sea-level maximum, so a very high elevation with heavy exercise may show a warning that the workload could not really be sustained.</li>
+    <li>Elevation: acclimatization, altitude illness and how altitude limits performance are taught in Module 9 (Lecture #7, Environmental Considerations), not in Module 4 or 5, and are not modeled here. Each workload stays at the same percent of the person's sea-level maximum, so a very high elevation with heavy exercise may show a warning that the workload could not really be sustained.</li>
     <li>Pressures in the breathing cycle use the figures on the lecture slide at rest and scale up with exercise, in direction and relative size only.</li>
     <li>Disease states (obstructive and restrictive disease, ventilation-perfusion mismatch, altitude illness) are not part of this version.</li>
   </ul>
@@ -344,7 +344,7 @@ function derive(s){
 
 /* ================= state ================= */
 const restFor=p=>({person:p,ex:0,elev:0,pat:0,cond:null});
-let st=restFor('T'), cmpMode='typ', last='intro', sceneNote='rest', tab='ov', details=LS.get('cvP_det')==='1', showRef=true, showAll=false, vq='tv';
+let st=restFor('T'), cmpMode='typ', last='intro', sceneNote='rest', tab='ov', details=false, showRef=true, showAll=false, vq='tv', gq='o2';
 let D=derive(st), DR=derive(st), clock=0, speed=0.5, paused=false;
 let sel={air:null,vol:null,vent:null,gas:null,o2:null,ctl:null,fit:null};
 let activeObj=null, conceptOpen=LS.get('cvP_concept')!=='0', termOpen=null, evOpen=null, refs={};
@@ -366,11 +366,12 @@ function buildCtl(){
   <div class="row2" style="margin:8px 0 0"><span style="font-size:12px;color:var(--mut)">Dashed line shows</span><span class="seg" id="cmp"><button type="button" data-m="typ">Typical person</button><button type="button" data-m="rest">This person at rest</button></span></div>
   <p class="cap" id="cmpCap"></p></div>
   <h3>Scenarios</h3><div class="scn" id="scn"></div>
+  <p class="cap" id="altNote">The Denver and 14,000 ft scenarios are here only to show how lower inspired PO₂ changes these numbers. Altitude is taught in Module 9 (Lecture #7, Thermoregulation &amp; Environmental Considerations), not in Module 4 or 5.</p>
   <h3>Exercise</h3>
   <div class="sl"><div class="top"><label for="s_ex">Exercise intensity</label><b id="v_ex"></b></div><input type="range" id="s_ex" min="0" max="100" step="1" value="0"><div class="endl"><span>rest</span><span>maximal</span></div><div class="eff" id="e_ex"></div></div>
   <div id="blkElev"><h3>Elevation</h3>
   <div class="sl"><div class="top"><label for="s_elev">Elevation above sea level</label><b id="v_elev"></b></div><input type="range" id="s_elev" min="0" max="18000" step="500" value="0"><div class="endl"><span>sea level</span><span>18,000 ft</span></div><div class="eff" id="e_elev"></div></div>
-  <p class="cap">Changes the inspired PO₂ only. Acclimatization and performance are covered in the environmental considerations lecture.</p></div>
+  <p class="cap">Changes the inspired PO₂ only. Altitude, acclimatization and performance are covered in Module 9 (Environmental Considerations), not in Module 4 or 5.</p></div>
   <div id="blkPat"><h3>Breathing pattern</h3>
   <div class="sl"><div class="top"><label for="s_pat">Same ventilation, different pattern</label><b id="v_pat"></b></div><input type="range" id="s_pat" min="-100" max="100" step="5" value="0"><div class="endl"><span>deep, slow</span><span>shallow, fast</span></div><div class="eff" id="e_pat"></div></div>
   <p class="cap">Ventilation is held fixed so you can see what the pattern does to alveolar ventilation. In life, a rising PCO₂ would drive ventilation up.</p></div>
@@ -395,7 +396,8 @@ function applyScn(id){const s=SCN.find(x=>x[0]===id);st={...restFor(st.person),.
 function syncCtl(){
   const o=tab==='ov';
   $('#blkPerson').classList.toggle('hide',o);
-  $('#blkElev').classList.toggle('hide',!['gas','o2','ctl'].includes(tab));
+  $('#blkElev').classList.toggle('hide',!['o2','ctl'].includes(tab));
+  $('#altNote').classList.toggle('hide',!['gas','o2','ctl'].includes(tab));
   $('#blkPat').classList.toggle('hide',tab!=='vent');
   $('#blkCond').classList.toggle('hide',!(tab==='o2'&&details));
   const set=(k,v,txt)=>{const i=$('#s_'+k); if(+i.value!==v) i.value=v; $('#v_'+k).textContent=txt};
@@ -442,7 +444,7 @@ const SCENE={
  shallow:{t:(d,r)=>`Shallow, fast breathing at the same total ventilation: ${fx(d.TV*1000)} mL × ${fx(d.RR)}/min. More of each breath is dead space, so alveolar ventilation falls ${ar(r.VA,d.VA,1)} L/min and alveolar PCO₂ rises ${ar(r.PACO2,d.PACO2)} mmHg.`,m:'The same minute ventilation does not mean the same gas exchange. Dead space is a fixed volume in every breath.'},
  deep:{t:(d,r)=>`Deep, slow breathing at the same total ventilation: ${fx(d.TV*1000)} mL × ${fx(d.RR)}/min. Less ventilation is wasted on dead space, so alveolar ventilation rises ${ar(r.VA,d.VA,1)} L/min and alveolar PCO₂ falls ${ar(r.PACO2,d.PACO2)} mmHg.`,m:'Alveolar ventilation = (tidal volume − dead space) × rate.'},
  denver:{t:(d,r)=>`At 5,280 ft, barometric pressure is ${fx(d.pb)} mmHg and inspired PO₂ is ${fx(d.pio2)} mmHg (${fx(PIO2(0))} at sea level). Alveolar PO₂ falls ${ar(r.PAO2,d.PAO2)} mmHg and arterial saturation ${ar(r.SaO2*100,d.SaO2*100)}%. Ventilation rises slightly (${ar(r.VE,d.VE,1)} L/min).`,m:'Oxygen is still 20.9% of the air. The pressure pushing it into the blood is what drops.'},
- alt14:{t:(d,r)=>`At 14,000 ft, inspired PO₂ is ${fx(d.pio2)} mmHg and alveolar PO₂ is ${fx(d.PAO2)} mmHg. Arterial saturation falls to ${fx(d.SaO2*100)}% (from ${fx(r.SaO2*100)}%) because the blood is now on the steep part of the oxyhemoglobin curve. Low PO₂ drives ventilation up (${ar(r.VE,d.VE,1)} L/min), which lowers alveolar PCO₂ to ${fx(d.PACO2)} mmHg.`,m:'Acclimatization, altitude illness and effects on performance are covered in the environmental considerations lecture.'}
+ alt14:{t:(d,r)=>`At 14,000 ft, inspired PO₂ is ${fx(d.pio2)} mmHg and alveolar PO₂ is ${fx(d.PAO2)} mmHg. Arterial saturation falls to ${fx(d.SaO2*100)}% (from ${fx(r.SaO2*100)}%) because the blood is now on the steep part of the oxyhemoglobin curve. Low PO₂ drives ventilation up (${ar(r.VE,d.VE,1)} L/min), which lowers alveolar PCO₂ to ${fx(d.PACO2)} mmHg.`,m:'Altitude, acclimatization and effects on performance are taught in Module 9 (Environmental Considerations), not in Module 4 or 5.'}
 };
 function explain(){
   const d=D,r=DR,k=last; let t='',m='';
@@ -461,7 +463,7 @@ const CONCEPT={
  air:{title:'Airways and the breathing cycle',html:`<p>Air passes through the <b>conducting zone</b> (trachea to terminal bronchioles) to the <b>respiratory zone</b> (respiratory bronchioles to alveolar sacs), where gas exchange happens. Each branching makes the tubes narrower but adds total surface area.</p><p>Inhalation is active: the diaphragm and external intercostals enlarge the thorax, pressure inside falls below atmospheric, and air flows in. At rest, exhalation is passive: the muscles relax and elastic recoil pushes air out. In exercise, accessory and expiratory muscles make exhalation active.</p><p>Tap a structure, or its ?, to read about it.</p>`},
  vol:{title:'Lung volumes (an introduction)',html:`<p>A resting breath (<b>tidal volume</b>) uses only a small band of the lung. The <b>inspiratory reserve volume</b> above it and the <b>expiratory reserve volume</b> below it are what you draw on in exercise. The <b>residual volume</b> stays in the lungs even after a forced exhalation.</p><p>Tap a volume to read its definition. Turn on Show details for the capacities, which are sums of the volumes.</p>`},
  vent:{title:'Minute and alveolar ventilation',html:`<p><b>Minute ventilation</b> = tidal volume × respiratory rate. At rest about 5 to 6 L/min; at maximal exercise about 70 to 125 L/min.</p><p><b>Alveolar ventilation</b> = (tidal volume − dead space) × rate. Only the air that reaches the alveoli takes part in gas exchange, so deep breaths are more efficient than fast shallow ones at the same minute ventilation.</p>`},
- gas:{title:'Partial pressures and gas exchange',html:`<p>Each gas moves from higher to lower partial pressure (PO₂ or PCO₂), and dissolves in fluid in proportion to its partial pressure (Henry's law). Oxygen moves from alveolar air into the blood, and CO₂ moves the other way. Blood reaches equilibrium with the alveolus in about a third of the time it spends in the capillary, so there is a reserve.</p><p>Tap a compartment to read about it. Elevation lowers inspired PO₂ and everything downstream.</p>`},
+ gas:{title:'Partial pressures and gas exchange',html:`<p>Each gas moves from higher to lower partial pressure (PO₂ or PCO₂), and dissolves in fluid in proportion to its partial pressure (Henry's law). Oxygen moves from alveolar air into the blood and then into muscle, and CO₂ moves the other way. Switch between PO₂ and PCO₂ to follow each gas from inspired air to venous blood.</p><p>The second chart shows the ventilation-perfusion (V/Q) ratio from the top to the base of the lung. In exercise, blood flow rises more at the top, so more of the lung is matched. Tap a bar or a chart title to read about it.</p>`},
  o2:{title:'Oxygen transport',html:`<p>Most oxygen travels bound to hemoglobin. Near normal alveolar PO₂ the curve is flat, so arterial saturation stays high even when PO₂ varies. In working muscle, lower pH, higher PCO₂ and higher temperature shift the curve to the right, so more oxygen is released at the same PO₂.</p><p>The oxygen delivered to tissue is cardiac output × the arterial-venous O₂ difference (the Fick equation).</p>`},
  ctl:{title:'Controls on ventilation',html:`<p>Receptors send information to the respiratory centers in the brainstem, which drive the ventilatory muscles. At the start of exercise ventilation jumps within seconds, from <b>central command</b> and <b>joint and muscle input</b>. It then keeps rising more slowly as <b>chemical</b> signals (CO₂, H⁺, K⁺, temperature) build. When exercise stops, the fast part drops at once and the chemical part clears slowly.</p><p>At rest, chemoreceptors have the greatest control: small rises in PCO₂ cause large rises in ventilation, while falling PO₂ matters much less until it is quite low.</p>`},
  fit:{title:'VO₂max, thresholds and the Fick equation',html:`<p><b>VO₂max</b> is the maximal rate of oxygen uptake, transport and use. It needs ventilation, cardiovascular output and muscle oxygen extraction: VO₂ = cardiac output × (a-vO₂ difference).</p><p>As intensity rises, ventilation and blood lactate each reach a point where they climb faster than oxygen use (the ventilatory and lactate thresholds). Training moves both to a higher percent of VO₂max.</p>`}
@@ -503,10 +505,10 @@ const SELTXT={
   trach:['Trachea','Air is warmed and humidified. Water vapor takes up 47 mmHg, so PO₂ = FiO₂ × (PB − 47), about 149 mmHg at sea level.'],
   alv:['Alveolus','Gas exchange removes O₂ and adds CO₂, so alveolar PO₂ is about 100 and PCO₂ about 40 mmHg at rest. Ventilation sets these values: more alveolar ventilation raises PO₂ and lowers PCO₂.'],
   art:['Arterial blood','Arterial blood leaving the lungs is close to alveolar values. At sea level its PO₂ is near 100 mmHg, where hemoglobin is almost fully saturated.'],
-  mus:['Working muscle','Muscle uses O₂ and makes CO₂, so PO₂ falls and PCO₂ rises in the capillaries. The pressure drop pulls O₂ out of the blood and CO₂ in.'],
+  mus:['Skeletal muscle','Muscle uses O₂ and makes CO₂, so PO₂ falls and PCO₂ rises in the tissue capillaries. The pressure drop pulls O₂ out of the blood and CO₂ in. In this model, blood leaving the muscle is the venous blood, so the two bars match.'],
   ven:['Mixed venous blood','Blood returning to the lungs carries less oxygen and more CO₂ (about 40 and 46 mmHg at rest). In exercise it is lower in O₂ and higher in CO₂.'],
-  cap:['Capillary equilibration','As blood moves along the pulmonary capillary, its PO₂ rises toward alveolar PO₂. Even in exercise, when transit is shorter, equilibrium is reached with time to spare in healthy lungs.'],
-  vq:['Ventilation and perfusion','Gas exchange is best where ventilation and blood flow are matched. At rest, the top of the upright lung gets more air than blood, and the base more blood than air. Exercise makes the matching more even.']
+  cap:['Capillary equilibration (extra)','This chart is not in the lecture. As blood moves along the pulmonary capillary, its PO₂ rises toward alveolar PO₂. Even in exercise, when transit is shorter, equilibrium is reached with time to spare in healthy lungs.'],
+  vq:['Ventilation and blood flow (V/Q)','Gas exchange is best where ventilation and blood flow are matched (V ≈ Q). At the top of the upright lung, ventilation exceeds flow (V > Q), which acts like dead space. At the base, flow exceeds ventilation (V < Q), which acts like a shunt. In exercise, flow rises more at the top, so more of the lung is matched. Zone boundaries here are approximate.']
  },
  o2:{
   curve:['The oxyhemoglobin curve','Percent saturation of hemoglobin plotted against PO₂. The S shape means saturation is nearly flat above about 60 mmHg (so arterial blood stays full) and drops steeply at lower PO₂ (so muscle can unload oxygen).'],
@@ -811,48 +813,62 @@ function drawVent(W){
 
 /* ----- gas exchange ----- */
 function drawGas(W){
-  const wide=W>=640, h1=190, y1=20, H0=y1+h1+54;
-  const Pc=PL(W,H0,{l:46,r:10,t:y1,b:54},[0,5],[0,170]);
-  const cap={w:wide?Math.round((W-30)/2):W}, y2=H0+16, h2=wide?130:116;
-  const x2=0, x3=wide?Math.round(W/2)+10:0, y3=wide?y2:y2+h2+66;
-  const H=(wide?y2+h2+50:y3+h2+50);
+  const wide=W>=640, y1=40, h1=wide?188:176, gco=gq==='co2';
+  const colA=wide?Math.round(W*0.56):W;
+  const sites=[['insp','Inspired air','Inspired'],['trach','Trachea','Trachea'],['alv','Alveolus','Alveoli'],['art','Arterial blood','Arterial'],['mus','Muscle','Muscle'],['ven','Venous blood','Venous']];
+  const vals=(d,pb0)=>gco?{insp:0.3,trach:0.3,alv:d.PACO2,art:d.PACO2,mus:d.PvCO2,ven:d.PvCO2}:{insp:pb0,trach:d.pio2,alv:d.PAO2,art:d.PaO2,mus:d.PvO2,ven:d.PvO2};
+  const cv=vals(D,F_O2*PB(st.elev)), rv=vals(DG,F_O2*PB(0));
+  const ymax=gco?Math.max(60,Math.ceil((Math.max(cv.mus,cv.ven,rv.ven)+8)/10)*10):170, yt=gco?[0,20,40,60,80].filter(v=>v<=ymax):[0,50,100,150];
+  const Pc=PL(W,y1+h1+30,{l:46,r:Math.max(8,W-colA+10),t:y1,b:30},[0,6],[0,ymax]);
   let a=hatch;
-  const cats=[['insp','Inspired air',F_O2*PB(st.elev),0.3,F_O2*PB(0),0.3],['trach','Trachea (humidified)',D.pio2,0.3,PIO2(0),0.3],['alv','Alveolus',D.PAO2,D.PACO2,DG.PAO2,DG.PACO2],['art','Arterial blood',D.PaO2,D.PACO2,DG.PaO2,DG.PACO2],['ven','Venous blood',D.PvO2,D.PvCO2,DG.PvO2,DG.PvCO2]];
-  a+=axes(Pc,[],[0,50,100,150],'','Partial pressure (mmHg)',null,v=>v);
-  const cw=Pc.w/5, bw=Math.min(34,cw*0.32), rf=diffRef();
-  cats.forEach((c,i)=>{
-    const cx=Pc.m.l+cw*(i+0.5), x1=cx-bw-2, x2b=cx+2;
-    if(rf){
-      a+=`<rect x="${x1.toFixed(1)}" y="${Pc.Y(c[4]).toFixed(1)}" width="${bw.toFixed(1)}" height="${(Pc.Y(0)-Pc.Y(c[4])).toFixed(1)}" fill="none" stroke="var(--faint)" stroke-width="1.6" stroke-dasharray="4 3"/><rect x="${x2b.toFixed(1)}" y="${Pc.Y(c[5]).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0.5,Pc.Y(0)-Pc.Y(c[5])).toFixed(1)}" fill="none" stroke="var(--faint)" stroke-width="1.6" stroke-dasharray="4 3"/>`;
-    }
-    a+=`<rect data-sel="${c[0]}" x="${x1.toFixed(1)}" y="${Pc.Y(c[2]).toFixed(1)}" width="${bw.toFixed(1)}" height="${(Pc.Y(0)-Pc.Y(c[2])).toFixed(1)}" fill="var(--accent)" fill-opacity=".85" style="cursor:pointer;${stS(c[0])}"/><rect data-sel="${c[0]}" x="${x2b.toFixed(1)}" y="${Pc.Y(c[3]).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,Pc.Y(0)-Pc.Y(c[3])).toFixed(1)}" fill="url(#hatch)" stroke="var(--mut)" stroke-width="1.3" style="cursor:pointer"/>`;
-    a+=`<text class="tk" x="${(x1+bw/2).toFixed(1)}" y="${(Pc.Y(c[2])-4).toFixed(1)}" text-anchor="middle" style="fill:var(--fg)">${fx(c[2])}</text><text class="tk" x="${(x2b+bw/2).toFixed(1)}" y="${(Pc.Y(c[3])-4).toFixed(1)}" text-anchor="middle" style="fill:var(--fg)">${fx(c[3])}</text>`;
-    const words=c[1].split(' (')[0], lab=wide?c[1]:words;
-    if(wide) a+=tl(c[0],lab,cx-lab.length*3.2-4,Pc.m.t+Pc.h+16,'start',{fs:11});
-    else {const sh={insp:'Inspired',trach:'Trachea',alv:'Alveoli',art:'Arterial',ven:'Venous'}[c[0]];a+=`<text data-sel="${c[0]}" class="lb" x="${cx.toFixed(1)}" y="${Pc.m.t+Pc.h+16}" text-anchor="middle" style="font-size:10.5px;cursor:pointer;${isSel(c[0])?'font-weight:700':''}">${sh}</text>`}
+  /* gas switch */
+  const chip=(id,txt,x)=>`<g data-gq="${id}" tabindex="0" role="button" aria-label="Show ${txt}" style="cursor:pointer"><rect x="${x}" y="6" width="${txt.length*7+22}" height="22" rx="11" fill="${gq===id?'var(--accent)':'var(--panel2)'}" fill-opacity="${gq===id?.22:1}" stroke="${gq===id?'var(--accent)':'var(--line)'}" stroke-width="${gq===id?2:1}"/><text class="lb s" x="${x+11}" y="21" style="font-size:11.5px;fill:var(--fg);${gq===id?'font-weight:700':''}">${txt}</text></g>`;
+  a+=chip('o2','PO₂',Pc.m.l)+chip('co2','PCO₂',Pc.m.l+66);
+  a+=`<text class="lb s" x="${Pc.m.l+140}" y="21" style="font-size:10.5px">one gas at a time</text>`;
+  a+=axes(Pc,[],yt,'',`${gco?'PCO₂':'PO₂'} (mmHg)`,null,v=>v);
+  const cw=Pc.w/6, bw=Math.min(40,cw*0.6), rf=diffRef();
+  sites.forEach((c,i)=>{
+    const k=c[0], cx=Pc.m.l+cw*(i+0.5), x1=cx-bw/2, v=cv[k], fill=gco?'url(#hatch)':'var(--accent)';
+    if(rf) a+=`<rect x="${x1.toFixed(1)}" y="${Pc.Y(rv[k]).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0.5,Pc.Y(0)-Pc.Y(rv[k])).toFixed(1)}" fill="none" stroke="var(--faint)" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+    a+=`<rect data-sel="${k}" x="${x1.toFixed(1)}" y="${Pc.Y(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,Pc.Y(0)-Pc.Y(v)).toFixed(1)}" fill="${fill}" fill-opacity="${gco?1:.85}" stroke="${gco?'var(--accent)':'none'}" stroke-width="1.6" style="cursor:pointer;${stS(k)}"/>`;
+    a+=`<text class="tk" x="${cx.toFixed(1)}" y="${(Pc.Y(v)-4).toFixed(1)}" text-anchor="middle" style="fill:var(--fg)">${fx(v,v<10?1:0)}</text>`;
+    a+=`<text data-sel="${k}" class="lb" x="${cx.toFixed(1)}" y="${Pc.m.t+Pc.h+16}" text-anchor="middle" style="font-size:${wide?11:10}px;cursor:pointer;${isSel(k)?'font-weight:700':''}">${c[2]}</text>`;
   });
-  a+=`<rect x="${Pc.m.l+4}" y="${Pc.m.t+Pc.h+30}" width="12" height="9" fill="var(--accent)" fill-opacity=".85"/><text class="lb s" x="${Pc.m.l+20}" y="${Pc.m.t+Pc.h+38}" style="font-size:11px">PO₂ (left bar)</text><rect x="${Pc.m.l+110}" y="${Pc.m.t+Pc.h+30}" width="12" height="9" fill="url(#hatch)" stroke="var(--mut)"/><text class="lb s" x="${Pc.m.l+126}" y="${Pc.m.t+Pc.h+38}" style="font-size:11px">PCO₂ (right bar)</text>`;
-  if(rf) a+=`<line x1="${Pc.m.l+232}" x2="${Pc.m.l+250}" y1="${Pc.m.t+Pc.h+35}" y2="${Pc.m.t+Pc.h+35}" class="gh"/><text class="lb s" x="${Pc.m.l+254}" y="${Pc.m.t+Pc.h+38}" style="font-size:11px">comparison</text>`;
-  if(st.elev>0) a+=`<text class="lb s" x="${Pc.m.l+Pc.w}" y="${Pc.m.t-6}" text-anchor="end" style="font-size:11px">at ${ftTxt(st.elev)}: barometric pressure ${fx(D.pb)} mmHg</text>`;
-  /* capillary equilibration */
-  const tmax=Math.max(0.9,D.transit*1.15);
-  const eq=PL(W,y2+h2+30,{l:x2+46,r:Math.max(8,W-(wide?x3-14:W-10)),t:y2,b:30},[0,tmax],[0,120]);
-  const tkq=[0,0.25,0.5,0.75].filter(v=>v<=tmax);
-  a+=axes(eq,tkq,[0,40,80,120],'Time in the pulmonary capillary (s)','Blood PO₂ (mmHg)',v=>v,v=>v);
-  const cpts=[];for(let i=0;i<=40;i++){const t=tmax*i/40;cpts.push([t,D.PAO2-(D.PAO2-D.PvO2)*Math.exp(-t/D.tau)])}
-  a+=`<line x1="${eq.m.l}" x2="${eq.m.l+eq.w}" y1="${eq.Y(D.PAO2).toFixed(1)}" y2="${eq.Y(D.PAO2).toFixed(1)}" class="gh"/><text class="lb s" x="${eq.m.l+eq.w-2}" y="${(eq.Y(D.PAO2)-4).toFixed(1)}" text-anchor="end" style="font-size:10.5px">alveolar PO₂</text>`;
-  a+=`<path class="cv" style="stroke:var(--accent)" d="${pth(cpts,eq)}"/>`;
-  a+=`<line x1="${eq.X(D.transit).toFixed(1)}" x2="${eq.X(D.transit).toFixed(1)}" y1="${eq.m.t}" y2="${eq.m.t+eq.h}" stroke="var(--sa)" stroke-width="1.4" stroke-dasharray="5 4"/><text class="lb s" x="${(eq.X(D.transit)-4).toFixed(1)}" y="${eq.m.t+eq.h-6}" text-anchor="end" style="font-size:10.5px">leaves capillary (${fx(D.transit,2)} s)</text>`;
-  a+=tl('cap','Capillary equilibration',eq.m.l+6,eq.m.t+12,'start',{fs:11.5});
-  /* V/Q */
+  if(rf) a+=`<line x1="${Pc.m.l+4}" x2="${Pc.m.l+22}" y1="${Pc.m.t+Pc.h+36}" y2="${Pc.m.t+Pc.h+36}" class="gh"/><text class="lb s" x="${Pc.m.l+27}" y="${Pc.m.t+Pc.h+40}" style="font-size:11px">comparison</text>`;
+  if(st.elev>0) a+=`<text class="lb s" x="${Pc.m.l+Pc.w}" y="${Pc.m.t+Pc.h+40}" text-anchor="end" style="font-size:10.5px">at ${ftTxt(st.elev)}: barometric pressure ${fx(D.pb)} mmHg</text>`;
+  const Hc=Pc.H+((rf||st.elev>0)?18:0);
+  /* ventilation and perfusion */
   const g=1-0.5*D.pctmax/100, gv=1-0.3*D.pctmax/100, Vtop=0.3,Vbase=0.8,Qtop=0.1,Qbase=1.1, mv=(Vtop+Vbase)/2, mq=(Qtop+Qbase)/2;
   const Vf=f=>mv+((Vtop+(Vbase-Vtop)*f)-mv)*gv, Qf=f=>mq+((Qtop+(Qbase-Qtop)*f)-mq)*g;
-  const vq=PL(W,y3+h2+30,{l:x3+46,r:22,t:y3,b:30},[0,1],[0,1.3]);
-  a+=axes(vq,[0,1],[0,0.5,1],'Top of lung to base','Relative flow (L/min)',v=>v===0?'top':'base',v=>v);
+  const x3=wide?colA+8:0, y3=wide?0:Hc+8, hq=wide?h1:140;
+  const vq=PL(W,y3+(wide?y1:34)+hq+(wide?66:74),{l:x3+(wide?40:46),r:14,t:y3+(wide?y1:34),b:wide?66:74},[0,1],[0,1.3]);
+  a+=tl('vq','Ventilation and blood flow (V/Q)',x3+(wide?6:12),y3+(wide?20:16),'start',{fs:11.5});
+  a+=axes(vq,[0,1],[0,0.5,1],'',`Flow (L/min per slice)`,v=>v===0?'top':'base',v=>v);
+  const N=40, zone=f=>{const r=Vf(f)/Qf(f);return r>1.25?0:r<0.8?2:1};
+  const zc=['color-mix(in srgb,var(--accent) 16%,transparent)','color-mix(in srgb,var(--fg) 9%,transparent)','color-mix(in srgb,var(--sa) 20%,transparent)'], zl=['V > Q','V ≈ Q','V < Q'];
+  let s0=0; const bands=[];
+  for(let i=1;i<=N;i++){ if(i===N||zone((i+0.5)/N)!==zone((s0+0.5)/N)){bands.push([s0/N,i/N,zone((s0+0.5)/N)]);s0=i} }
+  bands.forEach(b=>{const xa=vq.X(b[0]),xb=vq.X(b[1]);a+=`<rect x="${xa.toFixed(1)}" y="${vq.m.t}" width="${(xb-xa).toFixed(1)}" height="${vq.h}" fill="${zc[b[2]]}"/>`;if(xb-xa>34)a+=`<text class="lb s" x="${((xa+xb)/2).toFixed(1)}" y="${vq.m.t+vq.h-6}" text-anchor="middle" style="font-size:10.5px;font-weight:600">${zl[b[2]]}</text>`});
   const vp=[],qp=[];for(let i=0;i<=20;i++){const f=i/20;vp.push([f,Vf(f)]);qp.push([f,Qf(f)])}
   a+=`<path class="cv" style="stroke:var(--accent)" d="${pth(vp,vq)}"/><path class="cv" style="stroke:var(--sa);stroke-dasharray:7 3" d="${pth(qp,vq)}"/>`;
-  a+=tl('vq','Ventilation and perfusion',vq.m.l+6,vq.m.t+12,'start',{fs:11.5});
-  a+=`<text class="lb" x="${vq.X(0.02).toFixed(1)}" y="${(vq.Y(Vf(0))-7).toFixed(1)}" style="font-size:10.5px;fill:var(--accent)">ventilation</text><text class="lb" x="${vq.X(0.5).toFixed(1)}" y="${(vq.Y(Qf(0.5))+16).toFixed(1)}" text-anchor="middle" style="font-size:10.5px;fill:var(--sa)">blood flow</text>`;
+  a+=`<text class="lb" x="${vq.X(0.02).toFixed(1)}" y="${(vq.Y(Vf(0))-7).toFixed(1)}" style="font-size:10.5px;fill:var(--accent)">ventilation</text><text class="lb" x="${vq.X(0.98).toFixed(1)}" y="${(vq.Y(Qf(0.98))-8).toFixed(1)}" text-anchor="end" style="font-size:10.5px;fill:var(--sa)">blood flow</text>`;
+  const ly=vq.m.t+vq.h+(wide?32:40), lg=[[0,'dead space'],[1,'matched'],[2,'shunt-like']];
+  let lx=vq.m.l; lg.forEach(q=>{a+=`<rect x="${lx}" y="${ly-9}" width="12" height="11" fill="${zc[q[0]]}" stroke="var(--mut)" stroke-width="1"/><text class="lb s" x="${lx+16}" y="${ly}" style="font-size:10.5px">${q[1]}</text>`;lx+=(wide?112:100)});
+  a+=`<text class="lb s" x="${vq.m.l}" y="${ly+18}" style="font-size:10.5px">${D.pctmax>5?'Exercise: flow evens out, so more of the lung is matched':'Rest: top gets more air than blood, base more blood than air'}</text>`;
+  let H=Math.max(Hc,wide?vq.H+14:0), yb=wide?Math.max(Hc,vq.H+14):vq.H+16;
+  /* capillary equilibration (details only) */
+  if(details){
+    const tmax=Math.max(0.9,D.transit*1.15), h2=wide?120:110, y2=yb+8;
+    const eq=PL(W,y2+h2+30,{l:46,r:wide?Math.max(8,W-colA+10):10,t:y2,b:30},[0,tmax],[0,120]);
+    const tkq=[0,0.25,0.5,0.75].filter(v=>v<=tmax);
+    a+=axes(eq,tkq,[0,40,80,120],'Time in the pulmonary capillary (s)','Blood PO₂ (mmHg)',v=>v,v=>v);
+    const cpts=[];for(let i=0;i<=40;i++){const t=tmax*i/40;cpts.push([t,D.PAO2-(D.PAO2-D.PvO2)*Math.exp(-t/D.tau)])}
+    a+=`<line x1="${eq.m.l}" x2="${eq.m.l+eq.w}" y1="${eq.Y(D.PAO2).toFixed(1)}" y2="${eq.Y(D.PAO2).toFixed(1)}" class="gh"/><text class="lb s" x="${eq.m.l+eq.w-2}" y="${(eq.Y(D.PAO2)-4).toFixed(1)}" text-anchor="end" style="font-size:10.5px">alveolar PO₂</text>`;
+    a+=`<path class="cv" style="stroke:var(--accent)" d="${pth(cpts,eq)}"/>`;
+    a+=`<line x1="${eq.X(D.transit).toFixed(1)}" x2="${eq.X(D.transit).toFixed(1)}" y1="${eq.m.t}" y2="${eq.m.t+eq.h}" stroke="var(--sa)" stroke-width="1.4" stroke-dasharray="5 4"/><text class="lb s" x="${(eq.X(D.transit)-4).toFixed(1)}" y="${eq.m.t+eq.h-6}" text-anchor="end" style="font-size:10.5px">leaves capillary (${fx(D.transit,2)} s)</text>`;
+    a+=tl('cap','Capillary equilibration (extra)',eq.m.l+6,eq.m.t+12,'start',{fs:11.5});
+    H=eq.H;
+  } else H=yb;
   setSvg(W,H,a);
 }
 
@@ -1060,7 +1076,7 @@ function renderEvl(){
     h=tbl('Breathing',[row('rr','Respiratory rate',fx(r.RR),fx(d.RR),'breaths/min'),row('tv','Tidal volume',fx(r.TV*1000),fx(d.TV*1000),'mL'),row('ve','Minute ventilation = TV × rate',fx(r.VE,1),fx(d.VE,1),'L/min'),row('vd','Dead space',fx(VD*1000),fx(VD*1000),'mL'),row('va','Alveolar ventilation = (TV − dead space) × rate',fx(r.VA,1),fx(d.VA,1),'L/min')]);
   }
   else if(tab==='gas'){
-    h=tbl('Alveolar gas equation and blood gases',[row('trach','Barometric pressure',fx(r.pb),fx(d.pb),'mmHg'),row('trach','Inspired PO₂ (humidified)',fx(r.pio2),fx(d.pio2),'mmHg'),row('alv','Alveolar PCO₂',fx(r.PACO2),fx(d.PACO2),'mmHg'),row('alv','Alveolar PO₂ = inspired PO₂ − PCO₂ / R (approx.)',fx(r.PAO2),fx(d.PAO2),'mmHg'),row('art','Arterial PO₂',fx(r.PaO2),fx(d.PaO2),'mmHg'),row('ven','Venous PO₂',fx(r.PvO2),fx(d.PvO2),'mmHg'),row('cap','Time in the capillary',fx(r.transit,2),fx(d.transit,2),'s')]);
+    h=tbl('Alveolar gas equation and blood gases',[row('trach','Barometric pressure',fx(r.pb),fx(d.pb),'mmHg'),row('trach','Inspired PO₂ (humidified)',fx(r.pio2),fx(d.pio2),'mmHg'),row('alv','Alveolar PCO₂',fx(r.PACO2),fx(d.PACO2),'mmHg'),row('alv','Alveolar PO₂ = inspired PO₂ − PCO₂ / R (approx.)',fx(r.PAO2),fx(d.PAO2),'mmHg'),row('art','Arterial PO₂',fx(r.PaO2),fx(d.PaO2),'mmHg'),row('ven','Venous PO₂',fx(r.PvO2),fx(d.PvO2),'mmHg')].concat(details?[row('cap','Time in the capillary (extra)',fx(r.transit,2),fx(d.transit,2),'s')]:[]));
   }
   else if(tab==='o2'){
     h=tbl('Oxygen delivery',[row('art','Arterial PO₂',fx(r.PaO2),fx(d.PaO2),'mmHg'),row('art','Arterial saturation',fx(r.SaO2*100),fx(d.SaO2*100),'%'),row('art','Arterial O₂ content',fx(r.CaO2),fx(d.CaO2),'mL/L'),row('ven','Venous PO₂',fx(r.PvO2),fx(d.PvO2),'mmHg'),row('ven','Venous saturation',fx(r.SvO2*100),fx(d.SvO2*100),'%'),row('fick','Arterial-venous O₂ difference',fx(r.avO2),fx(d.avO2),'mL/L'),row('fick','Cardiac output (from the hemodynamics model)',fx(r.co,1),fx(d.co,1),'L/min'),row('fick','Oxygen uptake, VO₂',fx(r.vo2,2),fx(d.vo2,2),'L/min')]);
@@ -1120,7 +1136,7 @@ function buildTabs(){
   $('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)setTab(b.dataset.t)};
 }
 function setTab(t){
-  tab=t; for(const k in sel) sel[k]=null; evOpen=null;
+  tab=t; details=false; showAll=false; showRef=true; vq='tv'; gq='o2'; buildOpts(); for(const k in sel) sel[k]=null; evOpen=null;
   for(const b of $('#tabs').children){b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}
   LS.set('cvP_tab',t); buildScn(); syncCtl(); redraw(); renderBanner();
   if(t!=='ov'&&$('.stage').getBoundingClientRect().top<-40) $('.stage').scrollIntoView({block:'start'});
@@ -1128,7 +1144,7 @@ function setTab(t){
 function buildOpts(){
   $('#refWrap').style.display=['ctl','fit'].includes(tab)?'none':'';
   $('#allWrap').style.display=['vent','fit'].includes(tab)?'':'none';
-  $('#detWrap').style.display=['vol','o2'].includes(tab)?'':'none';
+  $('#detWrap').style.display=['vol','gas','o2'].includes(tab)?'':'none';
   $('#showAll').checked=showAll; $('#showDet').checked=details; $('#showRef').checked=showRef;
 }
 function redraw(){
@@ -1143,7 +1159,7 @@ function selectIn(key){
   if(sel[tab]) openConcept(); redraw();
   const c=$('#concept'); if(c&&sel[tab]){const r=c.getBoundingClientRect(); if(r.top>innerHeight-60) c.scrollIntoView({block:'nearest',behavior:'smooth'})}
 }
-function setDetails(v){details=v; LS.set('cvP_det',v?'1':'0'); update()}
+function setDetails(v){details=v; update()}
 
 /* ================= objectives ================= */
 const OBJ=[
@@ -1152,7 +1168,7 @@ const OBJ=[
  {g:'Respiratory cycle',t:'Identify the phases of the respiratory cycle',tab:'air',setP:{ex:0},try:'Watch one breath at half speed. When does alveolar pressure fall below atmospheric, and which muscles cause it? Then try Moderate exercise and compare the pressures.'},
  {g:'Lung volumes',t:'Define lung volumes and capacities',tab:'vol',det:true,try:'Tap each volume. Show details is on, so tap the capacities too. Then choose Moderate exercise and note which reserve volumes shrink.'},
  {g:'Ventilation',t:'Apply normal pulmonary ventilation to exercise: tidal volume, rate, minute and alveolar ventilation',tab:'vent',setP:{ex:50},try:'Raise exercise intensity from 0 to 100%. Which changes first, tidal volume or rate? Then try Shallow, fast breathing and Deep, slow breathing: why does alveolar ventilation change when minute ventilation does not?'},
- {g:'Gas exchange',t:'Summarize gas exchange at the alveolar-capillary membrane',tab:'gas',try:'Read the pressure cascade from air to venous blood. Then choose Maximal exercise: what happens to the time blood spends in the capillary, and does it still reach alveolar PO₂?'},
+ {g:'Gas exchange',t:'Summarize gas exchange at the alveolar-capillary membrane',tab:'gas',try:'Read PO₂ from inspired air to venous blood, then switch to PCO₂. Where does each gas fall and rise? Then choose Maximal exercise and watch the V/Q zones: what happens to the matched part of the lung?'},
  {g:'Factors that influence the lungs',t:'Explain how pH, temperature, CO₂ and altitude influence oxygen transport',tab:'o2',det:true,setP:{ex:80},try:'Show details is on. Move the pH, temperature and PCO₂ sliders and watch the venous point. Then use the elevation slider: why does arterial saturation change little at Denver but a lot at 14,000 ft?'},
  {g:'Controls on ventilation',t:'Explain the controls on pulmonary ventilation',tab:'ctl',setP:{ex:50},try:'Watch the marker as exercise starts and stops. Which part rises within seconds, and which part keeps climbing? Which falls first in recovery?'},
  {g:'Exercise responses',t:'Relate ventilation, lactate and the thresholds to oxygen uptake (VO₂max)',tab:'fit',setP:{ex:100},try:'Find the ventilatory and lactate thresholds. Then read the signs of a maximal effort: which are met at 100%?'},
@@ -1185,8 +1201,7 @@ function openSheet(id){$(id).classList.add('open');$(id).querySelector('button')
 function startObj(i){
   const o=OBJ[i]; activeObj=i; bannerOpen=true;
   st={...restFor('T'),...(o.setP||{})}; sceneNote=null; last=(o.setP&&o.setP.ex)?'ex':'intro';
-  if(o.det){details=true;LS.set('cvP_det','1')}
-  showAll=!!o.all;
+  details=!!o.det; showAll=!!o.all; showRef=true; vq='tv'; gq='o2';
   $('#shObj').classList.remove('open');
   tab=o.tab; for(const k in sel) sel[k]=null; evOpen=null; buildTabs(); buildScn(); update(); renderBanner();
   document.querySelector('.stage').scrollIntoView({block:'start'});
@@ -1201,8 +1216,8 @@ document.addEventListener('click',e=>{
 });
 
 /* ================= interactions ================= */
-$('#chart').addEventListener('click',e=>{const qq=e.target.closest('[data-qty]'); if(qq){vq=qq.dataset.qty;redraw();return} const s=e.target.closest('[data-sel]'); if(s) selectIn(s.dataset.sel)});
-$('#chart').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){const t=e.target.closest('[data-sel],[data-qty]'); if(t){e.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true}))}}});
+$('#chart').addEventListener('click',e=>{const qq=e.target.closest('[data-qty]'); if(qq){vq=qq.dataset.qty;redraw();return} const gg=e.target.closest('[data-gq]'); if(gg){gq=gg.dataset.gq;redraw();return} const s=e.target.closest('[data-sel]'); if(s) selectIn(s.dataset.sel)});
+$('#chart').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){const t=e.target.closest('[data-sel],[data-qty],[data-gq]'); if(t){e.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true}))}}});
 $('#evl').addEventListener('click',e=>{const r=e.target.closest('tr[data-sel]'); if(r) selectIn(r.dataset.sel)});
 $('#evl').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('tr[data-sel]')){e.preventDefault();e.target.click()}});
 $('#ovMain').addEventListener('click',e=>{
