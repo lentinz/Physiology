@@ -198,7 +198,7 @@ body.ov .main{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage"}
 #evl tr[data-sel]{cursor:pointer}
 #evl .cap{margin:6px 0 0}
 #blkElev h3,#blkPat h3,#blkCond h3{margin-top:14px}
-@media (max-width:480px){#evl td{font-size:12px}}
+@media (max-width:480px){#evl td{font-size:12px}#evl td:last-child,#evl td.r{white-space:normal!important}}
 [hidden]{display:none!important}</style>
 
 </head><body>
@@ -443,6 +443,22 @@ const SCENE={
  denver:{t:(d,r)=>`At 5,280 ft, barometric pressure is ${fx(d.pb)} mmHg and inspired PO₂ is ${fx(d.pio2)} mmHg (${fx(PIO2(0))} at sea level). Alveolar PO₂ falls ${ar(r.PAO2,d.PAO2)} mmHg and arterial saturation ${ar(r.SaO2*100,d.SaO2*100)}%. Ventilation rises slightly (${ar(r.VE,d.VE,1)} L/min).`,m:'Oxygen is still 20.9% of the air. The pressure pushing it into the blood is what drops.'},
  alt14:{t:(d,r)=>`At 14,000 ft, inspired PO₂ is ${fx(d.pio2)} mmHg and alveolar PO₂ is ${fx(d.PAO2)} mmHg. Arterial saturation falls to ${fx(d.SaO2*100)}% (from ${fx(r.SaO2*100)}%) because the blood is now on the steep part of the oxyhemoglobin curve. Low PO₂ drives ventilation up (${ar(r.VE,d.VE,1)} L/min), which lowers alveolar PCO₂ to ${fx(d.PACO2)} mmHg.`,m:'Altitude, acclimatization and effects on performance are taught in Module 9 (Environmental Considerations), not in Module 4 or 5.'}
 };
+function cmpText(){
+  if(!showAll||!['vent','fit'].includes(tab)) return '';
+  const ps=['D','T','E'], dd={}; for(const p of ps) dd[p]=derive({...st,person:p});
+  const nm=p=>PERS[p].name, rest=st.ex<=0, f=fx, where=rest?'at rest':`at ${st.ex}% of their own maximum`;
+  let h='';
+  if(tab==='vent'){
+    h=`<b>All three people ${where}:</b> `+ps.map(p=>`${nm(p)} ${f(dd[p].TV*1000)} mL × ${f(dd[p].RR)}/min = ${f(dd[p].VE,1)} L/min`).join('; ')+'. ';
+    h+=rest?`Resting minute and alveolar ventilation are about the same (${f(dd.D.VA,1)} L/min alveolar for all three) because resting oxygen use is the same. The better-conditioned person breathes slower and deeper (${nm('E')} ${f(dd.E.RR)}/min, ${nm('D')} ${f(dd.D.RR)}/min).`
+      :`The fitter person is working at a higher absolute VO₂ (${nm('D')} ${f(dd.D.vo2,2)}, ${nm('T')} ${f(dd.T.vo2,2)}, ${nm('E')} ${f(dd.E.vo2,2)} L/min), so ventilation is higher too. Each takes deeper and faster breaths than at rest, with tidal volume rising first.`;
+  } else {
+    h=`<b>All three people:</b> VO₂max ${ps.map(p=>`${nm(p)} ${f(PERS[p].mlkg)}`).join(', ')} mL/kg/min. Ventilatory threshold at ${ps.map(p=>`${nm(p)} ${f(PERS[p].fT*100)}%`).join(', ')} of VO₂max. `;
+    h+=rest?`Resting values are similar; the differences appear as intensity rises.`:`At this intensity, blood lactate is ${ps.map(p=>`${nm(p)} ${f(dd[p].lac,1)}`).join(', ')} mmol/L and ventilation ${ps.map(p=>`${nm(p)} ${f(dd[p].VE,1)}`).join(', ')} L/min. `;
+    h+=`Training raises VO₂max through a bigger stroke volume and better oxygen extraction (Fick), and moves the thresholds to a higher percent of VO₂max.`;
+  }
+  return `<p>${h}</p>`;
+}
 function explain(){
   const d=D,r=DR,k=last; let t='',m='';
   if(k==='intro'){t='Pick a scenario or move the exercise slider. Start on the <b>Airways and breathing</b> tab, then work through <b>Lung volumes</b>, <b>Ventilation</b>, <b>Gas exchange</b>, <b>O₂ transport</b>, <b>Control of breathing</b> and <b>Exercise and VO₂max</b>.';m='Tip: predict how ventilation, tidal volume and breathing rate will change before you move the slider.'}
@@ -452,7 +468,7 @@ function explain(){
   else if(k==='pat'){t=st.pat===0?'Normal pattern.':`Ventilation is held at ${fx(d.VE,1)} L/min. Tidal volume ${ar(r.TV*1000,d.TV*1000)} mL and rate ${ar(r.RR,d.RR)}/min change alveolar ventilation ${ar(r.VA,d.VA,1)} L/min and alveolar PCO₂ ${ar(r.PACO2,d.PACO2)} mmHg.`;m='Dead space (about 150 mL) is wasted in every breath, so shallow breaths waste a larger share.'}
   else if(k==='person'){const P=PERS[st.person];t=`${P.name} (${P.desc}): VO₂max about ${fx(P.mlkg)} mL/kg/min, ventilatory threshold at about ${fx(P.fT*100)}% of VO₂max. Resting breathing is ${fx(P.RR0)} breaths/min × ${fx(P.TV0*1000)} mL.`;m='Maximal heart rate is the same for all three, so differences in VO₂max come from stroke volume and oxygen extraction (see Exercise and VO₂max).'}
   else if(k==='cond'){t=`With pH ${fx(d.c.ph,2)}, ${fx(d.c.t,1)} °C and PCO₂ ${fx(d.c.pc)} mmHg at the muscle, venous PO₂ is ${fx(d.PvO2)} mmHg, compared with ${fx(d.PvO2std)} mmHg if the curve had not shifted.`;m='Lower pH, higher PCO₂ and higher temperature shift the curve right, so hemoglobin releases more oxygen at a given PO₂.'}
-  $('#explain').innerHTML=`<h2>What changed and why</h2><p>${t}</p>${m?`<p class="meta">${m}</p>`:''}`;
+  $('#explain').innerHTML=`<h2>What changed and why</h2><p>${t}</p>${cmpText()}${m?`<p class="meta">${m}</p>`:''}`;
 }
 
 /* ================= concept panel ================= */
@@ -1133,12 +1149,13 @@ function buildTabs(){
   $('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)setTab(b.dataset.t)};
 }
 function setTab(t){
-  tab=t; details=false; showAll=false; showRef=true; vq='tv'; gq='o2'; buildOpts(); for(const k in sel) sel[k]=null; evOpen=null;
+  tab=t; details=false; showAll=false; showRef=true; vq='tv'; gq='o2'; buildOpts(); explain(); for(const k in sel) sel[k]=null; evOpen=null;
   for(const b of $('#tabs').children){b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}
   LS.set('cvP_tab',t); buildScn(); syncCtl(); redraw(); renderBanner();
   if(t!=='ov'&&$('.stage').getBoundingClientRect().top<-40) $('.stage').scrollIntoView({block:'start'});
 }
 function buildOpts(){
+  for(const e of [$('#cmp').parentElement,$('#cmpcap')]) if(e) e.hidden=showAll&&['vent','fit'].includes(tab);
   $('#refWrap').style.display=['ctl','fit'].includes(tab)?'none':'';
   $('#allWrap').style.display=['vent','fit'].includes(tab)?'':'none';
   $('#detWrap').style.display=['vol','gas','o2'].includes(tab)?'':'none';
@@ -1222,7 +1239,7 @@ $('#ovMain').addEventListener('click',e=>{
   const t=e.target.closest('.term>button'); if(t){const i=+t.dataset.t; termOpen=termOpen===i?null:i; renderOverview()}
 });
 $('#showRef').onchange=e=>{showRef=e.target.checked;redraw()};
-$('#showAll').onchange=e=>{showAll=e.target.checked;redraw()};
+$('#showAll').onchange=e=>{showAll=e.target.checked;explain();redraw()};
 $('#showDet').onchange=e=>setDetails(e.target.checked);
 function setPaused(v){paused=v;const b=$('#pause');b.textContent=paused?'Play':'Pause';b.setAttribute('aria-pressed',paused)}
 $('#spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.v;for(const x of $('#spd').children){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b)}};
