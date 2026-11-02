@@ -199,9 +199,6 @@ body.ov .main{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage"}
 #evl .cap{margin:6px 0 0}
 #blkElev h3,#blkPat h3,#blkCond h3{margin-top:14px}
 @media (max-width:480px){#evl td{font-size:12px}}
-.uc{margin:0 0 12px;padding:12px 14px;border:2px solid var(--sa);border-radius:10px;background:color-mix(in srgb,var(--sa) 14%,var(--panel));font-size:14px}
-.uc>b:first-child{display:block;font-size:15px;letter-spacing:.08em;margin-bottom:2px}
-.uc b.w{font-weight:700}
 [hidden]{display:none!important}</style>
 
 </head><body>
@@ -1112,7 +1109,7 @@ const GLOSS=[
 function renderOverview(){
   const pk=p=>derive(restFor(p));
   const txt={D:'Breathes a little faster and shallower at rest, and reaches the ventilatory threshold at a lower percent of VO₂max.',T:'The typical reference person, and the starting point on every tab.',E:'Breathes slowly and deeply at rest, has a high VO₂max, and reaches the ventilatory threshold at a high percent of VO₂max.'};
-  $('#ovMain').innerHTML=`<div class="uc" role="note"><b>UNDER CONSTRUCTION</b>This model is still being built and checked. <b class="w">Please WAIT to use it until you are notified that it is ready for use.</b> Values and explanations may change or be wrong until then.</div><div class="banner" id="ovBanner"></div>
+  $('#ovMain').innerHTML=`<div class="banner" id="ovBanner"></div>
   <h2>What this model covers</h2>
   <p>How air moves in and out of the lungs, how oxygen and carbon dioxide cross to and from the blood, how oxygen is carried to muscle, and how breathing is controlled, at rest and during exercise. It covers normal physiology only.</p>
   <h2>How the tabs connect</h2>
