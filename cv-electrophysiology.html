@@ -410,7 +410,7 @@ function setDelays(d){
 const act=(u,apd)=>{ if(u<0) return 0; if(u<0.012) return u/0.012; if(u<apd-0.08) return 1; if(u<apd) return (apd-u)/0.08; return 0 };
 
 /* ================= state ================= */
-let st={...REST}, last='intro', sceneNote='rest', tab='ov', details=LS.get('cvB2_det')==='1', showRef=true, showAll=false;
+let st={...REST}, last='intro', sceneNote='rest', tab='ov', details=false, showRef=true, showAll=false;
 let D=derive(st), DR=derive(st), S=schedule(D), E=ecgSeries(D,S), clock=0, speed=0.5, paused=false;
 let condSel=null, apSel=null, ecgSel=null, evOpen=null, activeObj=null, conceptOpen=LS.get('cvB2_concept')!=='0', termOpen=null;
 let refs={};
@@ -910,7 +910,7 @@ function buildTabs(){
   $('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)setTab(b.dataset.t)};
 }
 function setTab(t){
-  tab=t; condSel=null; apSel=null; ecgSel=null; evOpen=null;
+  tab=t; details=false; showAll=false; showRef=true; buildOpts(); condSel=null; apSel=null; ecgSel=null; evOpen=null;
   for(const b of $('#tabs').children){b.classList.toggle('on',b.dataset.t===t);b.setAttribute('aria-selected',b.dataset.t===t)}
   LS.set('cvB2_tab',t); buildScn(); syncCtl(); redraw(); renderBanner();
   if(t!=='ov'&&$('.stage').getBoundingClientRect().top<-40) $('.stage').scrollIntoView({block:'start'});
@@ -935,7 +935,7 @@ function selectIn(kind,key){
   if(key) openConcept(); redraw();
   const c=$('#concept'); if(c&&(condSel||apSel||ecgSel)){const r=c.getBoundingClientRect(); if(r.top>innerHeight-60) c.scrollIntoView({block:'nearest',behavior:'smooth'})}
 }
-function setDetails(v){details=v; LS.set('cvB2_det',v?'1':'0'); update()}
+function setDetails(v){details=v; update()}
 
 /* ================= objectives ================= */
 const OBJ=[
@@ -975,8 +975,7 @@ function openSheet(id){$(id).classList.add('open');$(id).querySelector('button')
 function startObj(i){
   const o=OBJ[i]; activeObj=i; bannerOpen=true;
   st={...restFor('T'),...(o.setP||{})}; sceneNote=null; last=(o.setP&&o.setP.ex)?'ex':'intro';
-  if(o.det!==undefined&&o.det){details=true;LS.set('cvB2_det','1')}
-  showAll=!!o.all;
+  details=!!o.det; showAll=!!o.all; showRef=true;
   $('#shObj').classList.remove('open');
   tab=o.tab; condSel=apSel=ecgSel=null; evOpen=null; buildTabs(); buildScn(); update(); renderBanner();
   document.querySelector('.stage').scrollIntoView({block:'start'});

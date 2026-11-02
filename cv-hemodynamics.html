@@ -1182,8 +1182,10 @@ function buildTabs(){
   $('#tabs').innerHTML=TABS.map(t=>`<button type="button" role="tab" data-t="${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}</button>`).join('');
   $('#tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;setTab(b.dataset.t)};
 }
+function resetOpts(){details=false;showAll=false;showRef=true;hrq='co';syncOpts()}
+function syncOpts(){$('#showDet').checked=details;$('#showAll').checked=showAll;$('#showRef').checked=showRef}
 function setTab(t){
-  const was=tab; tab=t; circSel=null; cycSel=null; vtSel=null;
+  const was=tab; tab=t; resetOpts(); circSel=null; cycSel=null; vtSel=null;
   for(const b of $('#tabs').children)b.classList.toggle('on',b.dataset.t===t);
   document.body.classList.toggle('ov',t==='ov');
   if(was==='ov'||t==='ov'){ const host=$('.chartwrap'); host.innerHTML='<svg id="chart" role="img" aria-label="Interactive chart"></svg>'; }
@@ -1199,6 +1201,7 @@ function redraw(){
   $('#allWrap').style.display=CMPTABS.includes(tab)?'':'none';
   $('#detWrap').style.display=['pv','cyc','fs','hr','vt'].includes(tab)?'':'none';
   $('#refWrap').style.display=(['circ'].includes(tab)||SA())?'none':'';
+  syncOpts();
   const c=$('#chart'); if(c) c.setAttribute('aria-label',T[1]+' chart');
 }
 function update(){
@@ -1268,7 +1271,7 @@ function setupObj(i){
   if(o.person&&!o.scn) last='person';
   cmpMode='typ'; activeObj=i; $('#banner').dataset.open='1';
   $('#shObj').classList.remove('open');
-  tab=o.tab; buildTabs(); document.body.classList.toggle('ov',tab==='ov'); $('.chartwrap').innerHTML='<svg id="chart" role="img" aria-label="Interactive chart"></svg>';
+  tab=o.tab; resetOpts(); buildTabs(); document.body.classList.toggle('ov',tab==='ov'); $('.chartwrap').innerHTML='<svg id="chart" role="img" aria-label="Interactive chart"></svg>';
   circSel=o.sel&&o.tab==='circ'?o.sel:null; cycSel=null; vtSel=null; buildScn(); update();
   document.querySelector('.stage').scrollIntoView({block:'start'});
 }
@@ -1286,10 +1289,10 @@ function buildSheets(){
 /* ---------------- init ---------------- */
 document.body.classList.add('ov');
 buildCtl(); buildChips(); buildSheets(); buildOverview(); buildScn(); buildTabs();
-details=LS.get('cvA2_det')==='1'; $('#showDet').checked=details;
+details=false; $('#showDet').checked=false;
 $('#showRef').onchange=e=>{showRef=e.target.checked;redraw()};
 $('#showAll').onchange=e=>{showAll=e.target.checked;redraw()};
-$('#showDet').onchange=e=>{details=e.target.checked;LS.set('cvA2_det',details?'1':'0');redraw()};
+$('#showDet').onchange=e=>{details=e.target.checked;redraw()};
 $('#chart').parentNode.addEventListener('click',chartClick); $('.chartwrap').addEventListener('keydown',chartKey);
 $('#spd').onclick=e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.v;for(const x of $('#spd').children){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b)}};
 $('#spdHelp').onclick=()=>{const n=$('#spdNote'),o=!n.classList.contains('show');n.classList.toggle('show',o);$('#spdHelp').setAttribute('aria-expanded',o)};
